@@ -1,0 +1,1202 @@
+<!doctype html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e6b52">
+<title>اسکیم چیک | Scheme Check</title>
+<!-- fonts -->
+<style>
+  /* Layout: one narrow column of numbered question cards; results stack below, then the bank question and red flags. Always light. */
+  :root {
+    --bg: #f6f3ee; --card: #ffffff; --ink: #1d232b; --muted: #5c646d; --line: #e3ddd2;
+    --accent: #0e6b52; --accent-ink: #ffffff; --accent-soft: #e3f2ec;
+    --bad: #b42318; --bad-bg: #fdecea; --warn: #8a5a00; --warn-bg: #fff3d6; --good: #0e6b52; --good-bg: #e5f3ee;
+    --chip: #f1ede6; --focus: #f0a400; --wa: #1a7f45; --wa-ink: #ffffff; --tank: #cfe7dd;
+    --font-ur: 'Gulzar', 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', 'Noto Naskh Arabic', serif;
+    --font-en: 'Atkinson Hyperlegible', 'Segoe UI', Roboto, system-ui, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-en); }
+
+  .wrap { max-width: 552px; margin: 0 auto; padding-block: 12px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .wrap[lang="ur"] { font-family: var(--font-ur); font-size: 21px; line-height: 2.3; font-synthesis: none; --lh-ctl: 2.1; --title: 36px; }
+  .wrap[lang="en"] { font-family: var(--font-en); font-size: 18px; line-height: 1.55; --lh-ctl: 1.35; --title: 28px; }
+
+  header { display: grid; gap: 2px; padding: 4px 0; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: var(--title); margin: 0; line-height: 1.6; color: var(--accent); }
+  .wrap[lang="ur"] h1 { font-weight: 400; }
+  .tag { margin: 0; color: var(--muted); font-size: 0.86em; }
+
+  .lang { display: inline-flex; border: 2px solid var(--accent); border-radius: 99px; overflow: hidden; }
+  .lang button { font-size: 16px; line-height: 1.6; padding: 4px 14px; min-height: 40px; border: 0; background: var(--card); color: var(--accent); cursor: pointer; }
+  .lang button[lang="ur"] { font-family: var(--font-ur); font-size: 18px; line-height: 1.9; padding-block: 0; }
+  .lang button[lang="en"] { font-family: var(--font-en); font-weight: 700; }
+  .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+  .mode { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 2px solid var(--accent); border-radius: 14px; overflow: hidden; margin-top: 10px; }
+  .mode button { font: inherit; font-size: 0.8em; line-height: var(--lh-ctl); padding: 8px 6px; min-height: 52px; border: 0; background: var(--card); color: var(--accent); cursor: pointer; }
+  .mode button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .wrap[lang="en"] .mode button { font-weight: 700; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 14px; margin: 12px 0; }
+  .q { display: block; font-size: 1.04em; margin: 0 0 4px; }
+  .wrap[lang="en"] .q { font-weight: 700; }
+  .n { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 700 16px/1 var(--font-en); margin-inline-end: 8px; vertical-align: middle; }
+  .hint { color: var(--muted); font-size: 0.8em; margin: 0; }
+  .field { position: relative; margin-top: 4px; }
+  input[type=text] {
+    width: 100%; font: 400 24px/1.4 var(--font-en); padding: 10px 14px; border: 2px solid var(--line); border-radius: 10px;
+    background: var(--bg); color: var(--ink); direction: ltr; text-align: left;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--focus); }
+  .unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 18px; line-height: 1; pointer-events: none; }
+  .wrap[lang="ur"] .unit { font-family: var(--font-ur); font-size: 20px; line-height: 2; }
+  .words { min-height: 1.6em; color: var(--accent); font-size: 0.84em; margin-top: 2px; }
+  .words:empty { min-height: 0; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .chips.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .chip {
+    font: inherit; font-size: 0.8em; line-height: var(--lh-ctl); padding: 4px 10px; min-height: 48px;
+    border: 2px solid var(--line); border-radius: 10px; background: var(--chip); color: var(--ink); cursor: pointer;
+  }
+  .chip small { display: block; font-size: 0.72em; color: var(--muted); line-height: 1.5; }
+  .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .wrap[lang="en"] .chip[aria-pressed="true"] { font-weight: 700; }
+  .chip:disabled { opacity: .35; cursor: not-allowed; }
+  .seg { display: inline-flex; gap: 0; margin-top: 6px; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .seg .chip { border: 0; border-radius: 0; min-height: 40px; padding-inline: 16px; }
+  button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+  .type {
+    display: grid; justify-items: center; align-content: start; gap: 2px; padding: 8px 4px; min-height: 104px; text-align: center;
+    border: 2px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); cursor: pointer; font: inherit;
+  }
+  .type svg, .tank svg { direction: ltr; }
+  .type svg { width: 34px; height: 34px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .type svg .fill { fill: var(--accent); stroke: none; }
+  .type .tn { font-size: 0.72em; line-height: 1.7; }
+  .type .ts { font-size: 0.6em; line-height: 1.6; color: var(--muted); }
+  .wrap[lang="en"] .type .tn { font-weight: 700; line-height: 1.3; }
+  .wrap[lang="en"] .type .ts { line-height: 1.3; }
+  .type[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+
+  details { margin-top: 4px; }
+  summary { cursor: pointer; color: var(--accent); font-size: 0.86em; padding: 4px 0; }
+  .wrap[lang="en"] summary { font-weight: 700; }
+  .go {
+    width: 100%; font: inherit; font-size: 1.15em; line-height: var(--lh-ctl); padding: 10px; margin-top: 6px;
+    border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-ink); cursor: pointer;
+  }
+  .wrap[lang="en"] .go { font-weight: 700; }
+  .err { color: var(--bad); font-size: 0.8em; margin: 6px 0 0; }
+  .err:empty { display: none; }
+
+  #result { scroll-margin-top: 10px; }
+  .example { display: inline-block; font-size: 0.7em; line-height: 2; padding: 0 12px; border-radius: 99px; background: var(--chip); color: var(--muted); margin-top: 6px; }
+  .line { border-radius: 14px; padding: 12px 14px; margin: 12px 0; border: 2px solid transparent; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: start; }
+  .line .ln { grid-row: span 2; margin-top: 0.35em; }
+  .line p { margin: 0; font-size: 1.04em; }
+  .line .sub { font-size: 0.78em; color: var(--muted); margin-top: 4px; }
+  .line .sub:empty { display: none; }
+  .wrap[lang="en"] .big { font-weight: 700; }
+  .wrap[lang="ur"] .big { font-size: 1.06em; }
+  .l1 { background: var(--bad-bg); border-color: var(--bad); } .l1 .big { color: var(--bad); }
+  .l2 { background: var(--warn-bg); border-color: var(--warn); } .l2 .big { color: var(--warn); }
+  .l3 { background: var(--good-bg); border-color: var(--good); } .l3 .big { color: var(--good); }
+  .ln { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; font: 700 16px/1 var(--font-en); color: var(--card); }
+  .l1 .ln { background: var(--bad); } .l2 .ln { background: var(--warn); } .l3 .ln { background: var(--good); }
+
+  .tank h2 { font-size: 0.9em; margin: 0; font-weight: 400; }
+  .wrap[lang="en"] .tank h2 { font-weight: 700; }
+  .tank svg { display: block; width: 100%; height: auto; margin-top: 4px; touch-action: pan-y; }
+  .tank text { font-family: inherit; font-size: 13px; fill: var(--muted); }
+  .tank .tk-area { fill: var(--tank); }
+  .tank .tk-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+  .tank .tk-base { stroke: var(--line); stroke-width: 1; }
+  .tank .tk-today { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 3 3; }
+  .tank .tk-today-label { fill: var(--ink); font-size: 14px; }
+  .tank .tk-end { fill: var(--bad); stroke: var(--card); stroke-width: 2; }
+  .tank .tk-end-label { fill: var(--bad); font-size: 14px; }
+  .tank .tk-hover { stroke: var(--muted); stroke-width: 1; }
+  .tank .tk-dot { fill: var(--accent); stroke: var(--card); stroke-width: 2; }
+  .tank .tip { font-size: 0.74em; color: var(--muted); margin: 2px 0 0; min-height: 1.8em; }
+
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .btn {
+    font: inherit; font-size: 0.86em; line-height: var(--lh-ctl); padding: 8px 10px; min-height: 52px; border-radius: 12px; cursor: pointer;
+    border: 2px solid var(--accent); background: var(--card); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; text-decoration: none;
+  }
+  .btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .wrap[lang="en"] .btn { font-weight: 700; }
+  .btn.wa { background: var(--wa); border-color: var(--wa); color: var(--wa-ink); width: 100%; margin-top: 12px; }
+  .why, .note { background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 10px 14px; margin-top: 10px; font-size: 0.9em; }
+  .note { font-size: 0.78em; color: var(--muted); }
+  .qr { display: grid; place-items: center; margin: 10px 0 6px; }
+  .qr img { width: 180px; height: 180px; background: #ffffff; border-radius: 8px; }
+  .url { margin: 0 0 8px; text-align: center; font: 15px/1.5 var(--font-en); overflow-wrap: anywhere; direction: ltr; }
+  .url a { color: var(--accent); }
+  .copy-note { font-size: 0.74em; color: var(--muted); text-align: center; margin: 6px 0 0; }
+  .copy-note:empty { display: none; }
+
+  .bankq { border: 2px solid var(--good); }
+  .banks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+  .bank {
+    display: grid; justify-items: center; gap: 4px; padding: 10px 4px 6px; min-height: 104px;
+    border: 2px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); cursor: pointer; font: inherit;
+  }
+  .bank[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .logo {
+    width: 56px; height: 56px; border-radius: 12px; display: grid; place-items: center; overflow: hidden;
+    background: var(--chip); color: var(--accent); font: 700 15px/1 var(--font-en); letter-spacing: 0.04em; border: 1px solid var(--line);
+  }
+  .logo.has-img { width: 100%; height: 44px; background: #ffffff; border-color: transparent; padding: 2px 4px; }
+  .logo img { display: block; width: auto; height: auto; max-width: 100%; max-height: 38px; }
+  .bname { font-size: 0.7em; line-height: 1.6; text-align: center; overflow-wrap: anywhere; }
+  .wrap[lang="ur"] .bname { line-height: 1.9; }
+  .sublabel { font-size: 0.76em; color: var(--muted); margin: 10px 0 0; }
+  .rate-note { color: var(--muted); font-size: 0.78em; margin-top: 6px; }
+  .rate-note:empty { display: none; }
+
+  .flags { display: grid; gap: 10px; margin-top: 8px; }
+  .flag { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .flag:last-child { border-bottom: 0; padding-bottom: 0; }
+  .flag p { margin: 0; font-size: 0.8em; }
+  .flag .seg { margin: 0; }
+  .flag .chip { min-height: 44px; padding-inline: 14px; }
+  .flag .chip[data-v="yes"][aria-pressed="true"] { background: var(--bad-bg); color: var(--bad); }
+  .level { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; margin-top: 12px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); font-size: 0.86em; }
+  .level svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .level[data-level="none"] { border-color: var(--good); background: var(--good-bg); color: var(--good); }
+  .level[data-level="some"] { border-color: var(--warn); background: var(--warn-bg); color: var(--warn); }
+  .level[data-level="high"] { border-color: var(--bad); background: var(--bad-bg); color: var(--bad); }
+  .level span { color: var(--ink); }
+
+  .adv .row { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 8px; align-items: center; margin: 6px 0; direction: ltr; text-align: left; font: 14px/1.4 var(--font-en); }
+  .adv input[type=text] { font-size: 18px; padding: 6px 10px; }
+  .adv .detail { direction: ltr; text-align: left; font: 13px/1.5 Consolas, 'Courier New', monospace; color: var(--muted); white-space: pre-wrap; margin-top: 8px; overflow-wrap: anywhere; }
+  .adv .detail:empty { display: none; }
+  footer { color: var(--muted); font-size: 0.7em; margin-top: 18px; display: grid; gap: 2px; }
+
+  .hidden { display: none !important; }
+  bdi { unicode-bidi: isolate; }
+  @media (max-width: 360px) { .chips.grid, .banks, .types { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app" dir="rtl" lang="ur">
+  <header>
+    <div class="top">
+      <h1 data-t="title">اسکیم چیک</h1>
+      <div class="lang" role="group" aria-label="Language / زبان">
+        <button type="button" lang="ur" data-lang="ur" aria-pressed="true">اردو</button>
+        <button type="button" lang="en" data-lang="en" aria-pressed="false">English</button>
+      </div>
+    </div>
+    <p class="tag" data-t="tagline"></p>
+    <div class="mode" id="modeChips" role="group">
+      <button type="button" data-v="think" data-t="modeThink"></button>
+      <button type="button" data-v="already" data-t="modeAlready"></button>
+    </div>
+  </header>
+
+  <form id="form" novalidate>
+    <div class="card">
+      <div class="q"><span class="n">1</span><span data-t="qType"></span></div>
+      <div class="types" id="typeTiles" role="group">
+        <button type="button" class="type" data-v="double"><svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="13"/><text class="fill" x="17" y="22" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif">×2</text></svg><span class="tn" data-t="tyDouble"></span><span class="ts" data-t="tyDoubleSub"></span></button>
+        <button type="button" class="type" data-v="committee"><svg viewBox="0 0 34 34" aria-hidden="true"><circle class="fill" cx="17" cy="6" r="3.5"/><circle class="fill" cx="27.5" cy="13.6" r="3.5"/><circle class="fill" cx="23.5" cy="26" r="3.5"/><circle class="fill" cx="10.5" cy="26" r="3.5"/><circle class="fill" cx="6.5" cy="13.6" r="3.5"/><circle cx="17" cy="17" r="4"/></svg><span class="tn" data-t="tyCommittee"></span><span class="ts" data-t="tyCommitteeSub"></span></button>
+        <button type="button" class="type" data-v="crypto"><svg viewBox="0 0 34 34" aria-hidden="true"><rect x="10" y="3" width="14" height="28" rx="3"/><path d="M15 27h4M17 20V10M13.5 13.5 17 10l3.5 3.5"/></svg><span class="tn" data-t="tyCrypto"></span><span class="ts" data-t="tyCryptoSub"></span></button>
+        <button type="button" class="type" data-v="forex"><svg viewBox="0 0 34 34" aria-hidden="true"><path d="M4 29h26M5 23l7-8 6 5 7-11 5 4"/></svg><span class="tn" data-t="tyForex"></span><span class="ts" data-t="tyForexSub"></span></button>
+        <button type="button" class="type" data-v="modaraba"><svg viewBox="0 0 34 34" aria-hidden="true"><rect x="5" y="11" width="24" height="17" rx="2"/><path d="M13 11V7h8v4M5 18h24"/></svg><span class="tn" data-t="tyModaraba"></span><span class="ts" data-t="tyModarabaSub"></span></button>
+        <button type="button" class="type" data-v="other"><svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="13"/><path d="M13 13.5a4 4 0 1 1 5.5 3.7c-1 .5-1.5 1.2-1.5 2.3v.8"/><circle class="fill" cx="17" cy="24.5" r="1.5"/></svg><span class="tn" data-t="tyOther"></span><span class="ts" data-t="tyOtherSub"></span></button>
+      </div>
+      <p class="hint" data-t="typeHint" style="margin-top:6px"></p>
+    </div>
+
+    <div class="card">
+      <label class="q" for="amount"><span class="n">2</span><span id="amountLabel"></span></label>
+      <div class="field">
+        <input type="text" id="amount" inputmode="numeric" autocomplete="off" placeholder="100000">
+        <span class="unit" data-t="rs"></span>
+      </div>
+      <div class="words" id="amountWords" aria-live="polite"></div>
+      <div class="chips" id="amountChips">
+        <button type="button" class="chip" data-v="10000" data-t="a10k"></button>
+        <button type="button" class="chip" data-v="50000" data-t="a50k"></button>
+        <button type="button" class="chip" data-v="100000" data-t="a1l"></button>
+        <button type="button" class="chip" data-v="500000" data-t="a5l"></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q"><span class="n">3</span><span data-t="qFreq"></span></div>
+      <div class="chips grid" id="freqChips" role="group">
+        <button type="button" class="chip" data-v="daily" data-t="fDaily"></button>
+        <button type="button" class="chip" data-v="weekly" data-t="fWeekly"></button>
+        <button type="button" class="chip" data-v="monthly" data-t="fMonthly"></button>
+        <button type="button" class="chip" data-v="quarterly" data-t="fQuarterly"></button>
+        <button type="button" class="chip" data-v="yearly" data-t="fYearly"></button>
+        <button type="button" class="chip" data-v="lump"><span data-t="fLump"></span><small data-t="fLumpSub"></small></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <label class="q" for="rate"><span class="n">4</span><span id="rateLabel"></span></label>
+      <div class="seg" id="rateUnitChips" role="group">
+        <button type="button" class="chip" data-v="pct" data-t="unitPct"></button>
+        <button type="button" class="chip" data-v="rs" data-t="unitRs"></button>
+      </div>
+      <div class="field">
+        <input type="text" id="rate" inputmode="decimal" autocomplete="off" placeholder="10">
+        <span class="unit" id="rateUnit"></span>
+      </div>
+      <div class="words" id="rateWords" aria-live="polite"></div>
+      <p class="hint" id="rateHint"></p>
+      <div class="chips hidden" id="lumpChips">
+        <button type="button" class="chip" data-v="2" data-t="lumpDouble"></button>
+        <button type="button" class="chip" data-v="3" data-t="lumpTriple"></button>
+      </div>
+      <div id="periodBox" class="hidden">
+        <label class="q" for="period" style="margin-top:10px" data-t="qPeriod"></label>
+        <div class="field"><input type="text" id="period" inputmode="numeric" autocomplete="off" placeholder="70"></div>
+        <div class="chips" id="unitChips">
+          <button type="button" class="chip" data-v="days" data-t="uDays"></button>
+          <button type="button" class="chip" data-v="months" data-t="uMonths"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="alreadyBox">
+      <label class="q" for="ago"><span class="n">5</span><span data-t="qAgo"></span></label>
+      <div class="field"><input type="text" id="ago" inputmode="numeric" autocomplete="off" placeholder="4"><span class="unit" data-t="uMonths"></span></div>
+      <label class="q" for="got" style="margin-top:10px" data-t="qGot"></label>
+      <div class="field"><input type="text" id="got" inputmode="numeric" autocomplete="off" placeholder="40000"><span class="unit" data-t="rs"></span></div>
+      <p class="hint" data-t="gotHint"></p>
+    </div>
+
+    <div class="card">
+      <details id="ageBox">
+        <summary data-t="qAge"></summary>
+        <div class="field"><input type="text" id="age" inputmode="numeric" autocomplete="off" placeholder="12"><span class="unit" data-t="uMonths"></span></div>
+        <p class="hint" data-t="ageHint"></p>
+      </details>
+    </div>
+
+    <button type="submit" class="go" data-t="calc"></button>
+    <p class="err" id="err" role="alert"></p>
+  </form>
+
+  <section id="result" class="hidden" aria-live="polite">
+    <span class="example hidden" id="exampleTag" data-t="example"></span>
+    <div class="line l1"><span class="ln">1</span><p id="l1"></p><p class="sub" id="l1s"></p></div>
+    <div class="line l2" id="l2box"><span class="ln">2</span><p id="l2"></p><p class="sub" id="l2s"></p></div>
+
+    <figure class="card tank" id="tank" style="margin-inline:0">
+      <h2 data-t="chartTitle"></h2>
+      <svg id="tankSvg" viewBox="0 0 320 170" role="img"></svg>
+      <figcaption class="tip" id="tankTip"></figcaption>
+    </figure>
+
+    <div class="actions">
+      <button type="button" class="btn" id="whyBtn" aria-expanded="false" data-t="whyBtn"></button>
+      <button type="button" class="btn" id="listenBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span id="listenText"></span></button>
+    </div>
+    <div class="why hidden" id="why" data-t="why"></div>
+    <div class="note hidden" id="voiceNote" data-t="noVoice"></div>
+
+    <div class="card bankq" id="bankQ">
+      <div class="q"><span class="n">?</span><span id="bankLabel"></span></div>
+      <p class="hint" data-t="bankHint"></p>
+      <div class="banks" id="bankGrid" role="group"></div>
+      <div id="bankMore" class="hidden">
+        <div class="chips" id="typeChips" role="group">
+          <button type="button" class="chip" data-v="savings" data-t="tSavings"></button>
+          <button type="button" class="chip" data-v="islamic" data-t="tIslamic"></button>
+          <button type="button" class="chip" data-v="fixed" data-t="tFixed"></button>
+        </div>
+        <p class="sublabel" data-t="taxQ"></p>
+        <div class="chips" id="taxChips" role="group">
+          <button type="button" class="chip" data-v="nonfiler" data-t="taxNon"></button>
+          <button type="button" class="chip" data-v="filer" data-t="taxFiler"></button>
+          <button type="button" class="chip" data-v="none" data-t="taxBefore"></button>
+        </div>
+        <p class="hint" data-t="taxHint" style="margin-top:4px"></p>
+        <div class="rate-note" id="bankRate"></div>
+      </div>
+    </div>
+    <div class="line l3 hidden" id="l3box"><span class="ln">3</span><p id="l3"></p></div>
+
+    <div class="card" id="flagCard">
+      <div class="q"><span class="n">!</span><span data-t="flagsTitle"></span></div>
+      <p class="hint" data-t="flagsHint"></p>
+      <div class="flags" id="flags"></div>
+      <div class="level hidden" id="level"></div>
+    </div>
+
+    <a class="btn wa" id="waBtn" href="https://wa.me/" target="_blank" rel="noopener" data-t="wa"></a>
+  </section>
+
+  <div class="card hidden" id="linkCard">
+    <div class="q" data-t="linkTitle"></div>
+    <p class="hint" data-t="linkHint"></p>
+    <div class="qr"><img id="qrImg" alt="QR"></div>
+    <p class="url"><a id="siteUrl" target="_blank" rel="noopener"></a></p>
+    <button type="button" class="btn" id="copyLink" style="width:100%" data-t="copy"></button>
+    <p class="copy-note" id="copyNote" aria-live="polite"></p>
+  </div>
+
+  <div class="card" id="shareCard">
+    <button type="button" class="btn" id="shareApp" style="width:100%" data-t="shareApp"></button>
+  </div>
+
+  <details class="card adv" id="adv">
+    <summary data-t="adv"></summary>
+    <div class="row"><span>g: recruitment growth / month</span><input type="text" id="adv-g" inputmode="decimal"></div>
+    <div class="row"><span>M: market size (× starting money)</span><input type="text" id="adv-M" inputmode="numeric"></div>
+    <div class="row"><span>k: operators' cut</span><input type="text" id="adv-k" inputmode="decimal"></div>
+    <div class="row"><span>q: share of payouts reinvested</span><input type="text" id="adv-q" inputmode="decimal"></div>
+    <button type="button" class="btn" id="advReset" style="width:100%;margin-top:6px" data-t="advReset"></button>
+    <div class="detail" id="detail"></div>
+  </details>
+
+  <footer>
+    <div id="ratesDate"></div>
+    <div data-t="disclaimer"></div>
+    <div data-t="logosNote"></div>
+  </footer>
+</div>
+
+<script src="../formula.js"></script>
+<script src="../banks.js"></script>
+<script src="../logos.js"></script>
+<script src="../site.js"></script>
+<script>
+(function () {
+  'use strict';
+  // Snapshot the page before anything changes it, so "send this calculator" shares a clean copy.
+  var SELF_HTML = '<!doctype html>\n' + document.documentElement.outerHTML;
+
+  var Model = window.ScamModel, BANKS = window.BANKS, LOGOS = window.BANK_LOGOS || {}, SITE = window.SITE || null;
+  var STORE = 'schemeCheck.v1';
+  var SVG = 'http://www.w3.org/2000/svg';
+  var $ = function (id) { return document.getElementById(id); };
+  var app = $('app');
+
+  function b(text) { return '<span class="big"><bdi>' + text + '</bdi></span>'; }
+  function tenthsOf(share) { return Math.min(10, Math.max(1, Math.round(share * 10))); }
+  function pctText(x) { var v = Math.round(x * 1000) / 10; return String(v % 1 ? v.toFixed(1) : v); }
+
+  // ---------- words ----------
+  var T = {
+    ur: {
+      title: 'اسکیم چیک',
+      tagline: 'چند باتیں لکھیں، اور جانیں کہ اس اسکیم میں آپ کے پیسوں کا کیا ہو گا۔ انٹرنیٹ کے بغیر چلتا ہے۔',
+      modeThink: 'پیسے لگانے کا سوچ رہا ہوں', modeAlready: 'پیسے لگا چکا ہوں',
+      qType: 'یہ کس قسم کی اسکیم ہے؟', typeHint: 'چننے سے عام وعدے کے نمبر بھر جائیں گے، آپ انہیں بدل سکتے ہیں۔',
+      tyDouble: 'پیسے ڈبل', tyDoubleSub: 'مثلاً 70 دن میں ڈبل',
+      tyCommittee: 'کمیٹی ڈبل', tyCommitteeSub: 'مثلاً 6 مہینے میں ڈبل',
+      tyCrypto: 'کرپٹو / ایپ', tyCryptoSub: 'مثلاً روزانہ 2%',
+      tyForex: 'فاریکس ٹریڈنگ', tyForexSub: 'مثلاً ہر مہینے 10%',
+      tyModaraba: 'مضاربہ / کاروبار', tyModarabaSub: 'مثلاً ہر مہینے 5%',
+      tyOther: 'کوئی اور', tyOtherSub: 'اپنے نمبر لکھیں',
+      qAmount: 'آپ کتنے پیسے لگانا چاہتے ہیں؟', qAmountAlready: 'آپ نے کتنے پیسے لگائے ہیں؟', rs: 'روپے',
+      a10k: '10 ہزار', a50k: '50 ہزار', a1l: '1 لاکھ', a5l: '5 لاکھ',
+      qFreq: 'منافع کب کب ملنے کا وعدہ ہے؟',
+      fDaily: 'روزانہ', fWeekly: 'ہر ہفتے', fMonthly: 'ہر مہینے', fQuarterly: 'ہر 3 مہینے', fYearly: 'ہر سال',
+      fLump: 'ایک ہی بار', fLumpSub: 'مثلاً پیسے ڈبل',
+      unitPct: 'فیصد %', unitRs: 'روپے',
+      rate: {
+        daily: ['ہر روز کتنا منافع بتایا ہے؟', 'مثلاً روزانہ 1 فیصد'],
+        weekly: ['ہر ہفتے کتنا منافع بتایا ہے؟', 'مثلاً ہر ہفتے 5 فیصد'],
+        monthly: ['ہر مہینے کتنا منافع بتایا ہے؟', 'مثلاً ہر مہینے 10 فیصد'],
+        quarterly: ['ہر 3 مہینے میں کتنا منافع بتایا ہے؟', 'مثلاً ہر 3 مہینے میں 15 فیصد'],
+        yearly: ['ہر سال کتنا منافع بتایا ہے؟', 'مثلاً سال کا 40 فیصد'],
+        lump: ['کل کتنا منافع بتایا ہے؟', 'پیسے ڈبل ہوں تو 100 لکھیں']
+      },
+      rateRs: {
+        daily: ['ہر روز کتنے روپے ملیں گے؟', 'مثلاً 1 لاکھ پر روزانہ 1 ہزار'],
+        weekly: ['ہر ہفتے کتنے روپے ملیں گے؟', 'مثلاً 1 لاکھ پر ہر ہفتے 5 ہزار'],
+        monthly: ['ہر مہینے کتنے روپے ملیں گے؟', 'مثلاً 1 لاکھ پر ہر مہینے 8 ہزار'],
+        quarterly: ['ہر 3 مہینے میں کتنے روپے ملیں گے؟', 'مثلاً 1 لاکھ پر ہر 3 مہینے میں 15 ہزار'],
+        yearly: ['ہر سال کتنے روپے ملیں گے؟', 'مثلاً 1 لاکھ پر سال کے 40 ہزار'],
+        lump: ['کل کتنے روپے واپس ملیں گے؟', 'مثلاً 50 ہزار دے کر 1 لاکھ واپس']
+      },
+      per: { daily: 'روزانہ', weekly: 'ہر ہفتے', monthly: 'ہر مہینے', quarterly: 'ہر 3 مہینے', yearly: 'ہر سال' },
+      convPct: function (p, per) { return '= ' + p + '% ' + per; },
+      convLumpPct: function (p) { return '= ' + p + '% منافع'; },
+      convRs: function (m, per) { return '= ' + m + ' ' + per; },
+      convLumpRs: function (m) { return '= کل ' + m + ' واپس'; },
+      lumpDouble: 'پیسے ڈبل', lumpTriple: 'تین گنا',
+      qPeriod: 'کتنے عرصے بعد ملے گا؟', uDays: 'دن', uMonths: 'مہینے',
+      qAgo: 'کتنے مہینے پہلے پیسے لگائے تھے؟', qGot: 'اب تک کتنے پیسے واپس مل چکے ہیں؟ (اگر یاد ہو)',
+      gotHint: 'یاد نہ ہو تو خالی چھوڑ دیں، ہم وعدے کے حساب سے اندازہ لگائیں گے۔',
+      qAge: 'یہ اسکیم کتنے مہینے سے چل رہی ہے؟ (اگر معلوم ہو)', ageHint: 'معلوم نہ ہو تو خالی چھوڑ دیں۔',
+      calc: 'حساب لگائیں',
+      errAmount: 'پہلے رقم لکھیں۔', errRate: 'بتایا گیا منافع لکھیں۔', errPeriod: 'لکھیں کہ منافع کتنے دن یا مہینے بعد ملے گا۔',
+      errBack: 'واپس ملنے والی رقم، لگائی گئی رقم سے زیادہ لکھیں۔', errAgo: 'لکھیں کہ کتنے مہینے پہلے پیسے لگائے تھے۔',
+      example: 'یہ ایک مثال ہے۔ اوپر اپنی اسکیم کے نمبر لکھیں۔',
+      chartTitle: 'اسکیم کی ٹینکی میں نقد پیسے',
+      chartCaption: 'نئے لوگوں کے پیسوں سے ٹینکی بھرتی ہے۔ جب نئے لوگ کم ہوتے ہیں تو منافع دیتے دیتے خالی ہو جاتی ہے۔',
+      chartToday: 'آج', chartStart: 'شروع',
+      chartTip: function (when, full) { return when + ': ٹینکی ' + full + '% بھری'; },
+      chartAria: function (end) { return 'اسکیم کی نقد رقم پہلے بڑھتی ہے، پھر ' + end + ' تک ختم ہو جاتی ہے۔'; },
+      whyBtn: 'کیوں؟', listen: 'سنیں', stop: 'روکیں',
+      noVoice: 'اس فون میں اردو آواز نہیں ملی۔ فون کی سیٹنگز میں Text-to-speech میں اردو شامل کریں۔',
+      why: 'یہ اسکیم پرانے ممبروں کو نئے ممبروں کے پیسوں سے منافع دیتی ہے۔ جب نئے لوگ آنا کم ہو جائیں گے تو پیسے ختم ہو جائیں گے۔',
+      qBank: 'یہی پیسے بینک میں رکھیں تو کیا ملے گا؟', qBankAlready: 'اگر یہی پیسے بینک میں رکھے ہوتے تو؟', bankHint: 'اپنا بینک چنیں',
+      tSavings: 'عام بچت', tIslamic: 'اسلامی بچت', tFixed: 'فکسڈ ڈپازٹ',
+      typeName: { savings: 'عام بچت اکاؤنٹ', islamic: 'اسلامی بچت اکاؤنٹ', fixed: 'ایک سال کے فکسڈ ڈپازٹ' },
+      taxQ: 'منافع پر ٹیکس:', taxNon: 'نان فائلر', taxFiler: 'فائلر', taxBefore: 'ٹیکس سے پہلے',
+      taxHint: 'اگر آپ کا نام FBR کی ایکٹو ٹیکس پیئر لسٹ میں ہے تو فائلر چنیں۔',
+      rateNote: function (p, tax) { return 'منافع: <bdi>' + p.rate.toFixed(2) + '%</bdi> سالانہ' + (tax ? '، ٹیکس <bdi>' + tax + '%</bdi> کٹنے کے بعد' : ' (ٹیکس سے پہلے)'); },
+      afterTax: ' (ٹیکس کے بعد)',
+      flagsTitle: 'خطرے کی نشانیاں', flagsHint: 'ہر سوال کا جواب دیں۔ حساب کے بغیر بھی یہ دھوکہ پہچاننے میں مدد کرتے ہیں۔',
+      yes: 'ہاں', no: 'نہیں',
+      flagQs: [
+        'کیا منافع کی گارنٹی دی گئی ہے؟',
+        'کیا نئے لوگ لانے پر بونس یا کمیشن ملتا ہے؟',
+        'کیا SECP یا اسٹیٹ بینک کا لائسنس دکھائے بغیر پیسے مانگے گئے؟',
+        'کیا یہ نہیں بتایا گیا کہ پیسہ کس کاروبار میں لگے گا؟',
+        'کیا جلدی فیصلہ کرنے کا دباؤ ہے؟ (مثلاً "آفر صرف آج")',
+        'کیا پیسے نکالنے میں دیر یا بہانے ہوتے ہیں؟'
+      ],
+      flagNone: 'ابھی کوئی بڑی نشانی نہیں ملی۔ پھر بھی پیسے لگانے سے پہلے secp.gov.pk پر تصدیق کریں۔',
+      flagSome: function (n) { return 'خطرہ: ' + n + ' نشانیاں ملی ہیں۔ یہ دھوکے کی اسکیم ہو سکتی ہے۔'; },
+      flagHigh: function (n, already) { return 'بہت زیادہ خطرہ: ' + n + ' نشانیاں ملی ہیں۔ ' + (already ? 'مزید پیسے نہ لگائیں اور جو نکال سکیں نکال لیں۔' : 'اس میں پیسے نہ لگائیں۔'); },
+      wa: 'واٹس ایپ پر بھیجیں',
+      shareApp: 'یہ کیلکولیٹر کسی کو بھیجیں یا فون میں محفوظ کریں',
+      linkTitle: 'یہ کیلکولیٹر دوسروں تک پہنچائیں',
+      linkHint: 'فون کے کیمرے سے یہ QR کوڈ اسکین کریں، یا لنک کاپی کر کے واٹس ایپ پر بھیجیں۔',
+      copy: 'لنک کاپی کریں', copied: 'لنک کاپی ہو گیا۔', copyFail: 'لنک کو دبا کر رکھیں اور کاپی کریں۔',
+      tryIt: 'اپنی اسکیم خود چیک کریں:',
+      adv: 'ماہرین کے لیے: ماڈل کی ترتیبات', advReset: 'اس قسم کی اسکیم کی ترتیبات پر واپس',
+      disclaimer: 'یہ حساب ایک ماڈل پر مبنی اندازہ ہے، مالی مشورہ نہیں۔ کسی بھی کمپنی میں پیسے لگانے سے پہلے secp.gov.pk پر تصدیق کریں۔',
+      logosNote: 'بینکوں کے نام اور لوگو صرف پہچان کے لیے ہیں۔ اس کیلکولیٹر کا کسی بینک سے تعلق نہیں۔',
+      months: ['جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون', 'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'],
+      share: '*اسکیم چیک*',
+      money: function (n) {
+        n = Math.max(0, n);
+        var parts = [];
+        if (n >= 100000) {
+          n = Math.round(n / 1000) * 1000;
+          var crore = Math.floor(n / 10000000), lakh = Math.floor(n % 10000000 / 100000), hazar = Math.floor(n % 100000 / 1000);
+          if (crore) parts.push(crore + ' کروڑ');
+          if (lakh) parts.push(lakh + ' لاکھ');
+          if (hazar) parts.push(hazar + ' ہزار');
+        } else if (n >= 1000) {
+          n = Math.round(n / 100) * 100;
+          parts.push(Math.floor(n / 1000) + ' ہزار');
+          if (n % 1000) parts.push(String(n % 1000));
+        } else {
+          parts.push(String(Math.round(n)));
+        }
+        return parts.join(' ') + ' روپے';
+      },
+      monthCount: function (n) { return n === 1 ? '1 مہینہ' : n + ' مہینے'; },
+      ratesDate: function (d, m, y, policy) { return 'بینکوں کی شرحیں ' + d + ' ' + m + ' ' + y + ' کی ہیں۔ SBP پالیسی ریٹ ' + policy + '%۔ ٹیکس کی شرحیں تصدیق طلب ہیں۔'; },
+      l1: function (when) { return 'اس اسکیم کے پیسے زیادہ سے زیادہ ' + b(when) + ' تک ختم ہو جائیں گے۔'; },
+      l1s: 'اکثر ایسی اسکیمیں اس سے پہلے ہی بند ہو جاتی ہیں۔',
+      l2All: function (amt) { return 'اگر آپ ' + b(amt) + ' لگائیں تو ' + b('تقریباً سارے پیسے') + ' ڈوب جائیں گے۔'; },
+      l2Loss: function (amt, loss) { return 'اگر آپ ' + b(amt) + ' لگائیں تو تقریباً ' + b(loss) + ' ڈوب جائیں گے۔'; },
+      l2Gain: function (rec) { return 'شاید آپ کو ' + b(rec) + ' واپس مل جائیں، لیکن یہ منافع دوسرے لوگوں کے ڈوبے ہوئے پیسوں سے آئے گا۔'; },
+      l2s: function (tenths) {
+        return (tenths >= 10 ? 'اس اسکیم میں تقریباً سب لوگ نقصان میں رہیں گے۔' : 'اس اسکیم میں ہر 10 میں سے ' + tenths + ' لوگ نقصان میں رہیں گے۔') +
+          ' بعد میں آنے والوں کے تقریباً سارے پیسے ڈوب جاتے ہیں۔';
+      },
+      inv2: function (rec, risk, est) { return 'آپ کو اب تک ' + (est ? 'تقریباً ' : '') + b(rec) + ' واپس ملے ہیں۔ آپ کے ' + b(risk) + ' ابھی خطرے میں ہیں۔'; },
+      inv2Back: function (rec, est) { return 'آپ اب تک ' + (est ? 'تقریباً ' : '') + b(rec) + ' واپس لے چکے ہیں، جو آپ کی رقم سے زیادہ ہے۔ مزید پیسے نہ لگائیں۔'; },
+      inv2s: function (tenths) {
+        return 'جتنے پیسے نکال سکتے ہیں، ابھی نکال لیں۔ ' +
+          (tenths >= 10 ? 'اس اسکیم میں تقریباً سب لوگ نقصان میں رہیں گے۔' : 'اس اسکیم میں ہر 10 میں سے ' + tenths + ' لوگ نقصان میں رہیں گے۔');
+      },
+      overdue1: 'حساب کے مطابق اس اسکیم کے پیسے ' + b('اب تک ختم ہو جانے چاہیے تھے') + '۔ اس میں نئے پیسے نہ لگائیں۔',
+      overdueAlready1: 'حساب کے مطابق اس اسکیم کے پیسے ' + b('اب تک ختم ہو جانے چاہیے تھے') + '۔ جتنا جلدی ہو سکے اپنے پیسے نکالیں۔',
+      overdueSub: 'جو اسکیم اپنی حد سے زیادہ چل رہی ہو، اس میں ابھی لگایا گیا پیسہ سب سے زیادہ خطرے میں ہے۔',
+      overdue2: function (amt) { return 'اگر آپ ' + b(amt) + ' لگائیں تو تقریباً سارے پیسے ڈوب سکتے ہیں۔'; },
+      secp1: 'اتنے منافع پر صرف حساب سے فیصلہ نہیں ہو سکتا۔ پیسے لگانے سے پہلے ' + b('secp.gov.pk') + ' پر دیکھیں کہ اس کمپنی کو لوگوں سے پیسے لینے کی اجازت ہے یا نہیں۔',
+      secpSub: 'صرف کمپنی کا رجسٹر ہونا کافی نہیں۔ نیچے خطرے کی نشانیاں بھی دیکھیں۔',
+      l3: function (amt, bank, type, months, profit, tax) {
+        return 'یہی ' + b(amt) + ' ' + bank + ' کے ' + type + ' میں ' + b(months) + ' رکھیں تو تقریباً ' + b(profit) + ' منافع ملے گا' + tax + '، اور اصل رقم بھی محفوظ رہے گی۔';
+      },
+      l3Past: function (amt, bank, type, months, profit, tax) {
+        return 'اگر یہی ' + b(amt) + ' ' + b(months) + ' پہلے ' + bank + ' کے ' + type + ' میں رکھتے تو اب تک تقریباً ' + b(profit) + ' منافع ملتا' + tax + '، اور اصل رقم بھی محفوظ ہوتی۔';
+      }
+    },
+    en: {
+      title: 'Scheme Check',
+      tagline: 'Answer a few questions and see what would happen to your money in this scheme. Works without internet.',
+      modeThink: 'Thinking of investing', modeAlready: 'Already invested',
+      qType: 'What kind of scheme is it?', typeHint: 'Picking one fills in a typical promise. You can change the numbers.',
+      tyDouble: 'Money doubling', tyDoubleSub: 'e.g. doubles in 70 days',
+      tyCommittee: 'Committee doubling', tyCommitteeSub: 'e.g. doubles in 6 months',
+      tyCrypto: 'Crypto or app', tyCryptoSub: 'e.g. 2% a day',
+      tyForex: 'Forex trading', tyForexSub: 'e.g. 10% a month',
+      tyModaraba: 'Modaraba or business', tyModarabaSub: 'e.g. 5% a month',
+      tyOther: 'Something else', tyOtherSub: 'enter your own numbers',
+      qAmount: 'How much money do you want to put in?', qAmountAlready: 'How much money did you put in?', rs: 'Rs',
+      a10k: '10,000', a50k: '50,000', a1l: '1 lakh', a5l: '5 lakh',
+      qFreq: 'How often does it promise to pay?',
+      fDaily: 'Every day', fWeekly: 'Every week', fMonthly: 'Every month', fQuarterly: 'Every 3 months', fYearly: 'Every year',
+      fLump: 'Only once', fLumpSub: 'e.g. money doubles',
+      unitPct: 'Percent %', unitRs: 'Rupees',
+      rate: {
+        daily: ['How much profit each day?', 'e.g. 1% a day'],
+        weekly: ['How much profit each week?', 'e.g. 5% a week'],
+        monthly: ['How much profit each month?', 'e.g. 10% a month'],
+        quarterly: ['How much profit every 3 months?', 'e.g. 15% every 3 months'],
+        yearly: ['How much profit each year?', 'e.g. 40% a year'],
+        lump: ['How much total profit is promised?', 'If the money doubles, write 100']
+      },
+      rateRs: {
+        daily: ['How many rupees will they pay each day?', 'e.g. Rs 1,000 a day on 1 lakh'],
+        weekly: ['How many rupees will they pay each week?', 'e.g. Rs 5,000 a week on 1 lakh'],
+        monthly: ['How many rupees will they pay each month?', 'e.g. Rs 8,000 a month on 1 lakh'],
+        quarterly: ['How many rupees every 3 months?', 'e.g. Rs 15,000 every 3 months on 1 lakh'],
+        yearly: ['How many rupees each year?', 'e.g. Rs 40,000 a year on 1 lakh'],
+        lump: ['How much will you get back in total?', 'e.g. put in 50,000, get 1 lakh back']
+      },
+      per: { daily: 'a day', weekly: 'a week', monthly: 'a month', quarterly: 'every 3 months', yearly: 'a year' },
+      convPct: function (p, per) { return '= ' + p + '% ' + per; },
+      convLumpPct: function (p) { return '= ' + p + '% profit'; },
+      convRs: function (m, per) { return '= ' + m + ' ' + per; },
+      convLumpRs: function (m) { return '= ' + m + ' back in total'; },
+      lumpDouble: 'Doubles', lumpTriple: 'Triples',
+      qPeriod: 'Paid after how long?', uDays: 'Days', uMonths: 'Months',
+      qAgo: 'How many months ago did you put the money in?', qGot: 'How much have you got back so far? (if you remember)',
+      gotHint: 'Leave it blank if you don\'t remember. We\'ll estimate it from the promise.',
+      qAge: 'How many months has this scheme been running? (if you know)', ageHint: 'Leave it blank if you don\'t know.',
+      calc: 'Calculate',
+      errAmount: 'Enter the amount first.', errRate: 'Enter the promised profit.', errPeriod: 'Enter after how many days or months it pays.',
+      errBack: 'Enter a total back that is more than the amount you put in.', errAgo: 'Enter how many months ago you put the money in.',
+      example: 'This is an example. Enter your scheme\'s numbers above.',
+      chartTitle: 'Cash in the scheme\'s tank',
+      chartCaption: 'New members\' money fills the tank. When fewer people join, paying profits drains it empty.',
+      chartToday: 'Today', chartStart: 'Start',
+      chartTip: function (when, full) { return when + ': tank ' + full + '% full'; },
+      chartAria: function (end) { return 'The scheme\'s cash grows at first, then runs out by ' + end + '.'; },
+      whyBtn: 'Why?', listen: 'Listen', stop: 'Stop',
+      noVoice: 'No voice for this language was found on this phone. Add it in the phone\'s text-to-speech settings.',
+      why: 'This scheme pays old members with new members\' money. When fewer new people join, the money runs out.',
+      qBank: 'What if you kept this money in a bank?', qBankAlready: 'What if this money had been in a bank?', bankHint: 'Pick a bank',
+      tSavings: 'Savings', tIslamic: 'Islamic savings', tFixed: 'Fixed deposit',
+      typeName: { savings: 'a savings account', islamic: 'an Islamic savings account', fixed: 'a 1-year fixed deposit' },
+      taxQ: 'Tax on profit:', taxNon: 'Non-filer', taxFiler: 'Filer', taxBefore: 'Before tax',
+      taxHint: 'Pick Filer if your name is on FBR\'s Active Taxpayer List.',
+      rateNote: function (p, tax) { return 'Profit: ' + p.rate.toFixed(2) + '% a year' + (tax ? ', after ' + tax + '% tax' : ' (before tax)'); },
+      afterTax: ' after tax',
+      flagsTitle: 'Warning signs', flagsHint: 'Answer each one. These help spot a scam even without the numbers.',
+      yes: 'Yes', no: 'No',
+      flagQs: [
+        'Is the profit guaranteed?',
+        'Do you get a bonus or commission for bringing new people?',
+        'Did they ask for money without showing an SECP or State Bank licence?',
+        'Were you not told what business your money goes into?',
+        'Is there pressure to decide fast? (e.g. "offer ends today")',
+        'Are there delays or excuses when people try to take money out?'
+      ],
+      flagNone: 'No big warning signs so far. Still check secp.gov.pk before putting money in.',
+      flagSome: function (n) { return 'Warning: ' + n + ' sign' + (n > 1 ? 's' : '') + ' found. This could be a scam.'; },
+      flagHigh: function (n, already) { return 'High risk: ' + n + ' signs found. ' + (already ? 'Don\'t put in more, and take out what you can.' : 'Do not put money in.'); },
+      wa: 'Send on WhatsApp',
+      shareApp: 'Send this calculator to someone or save it on your phone',
+      linkTitle: 'Pass this calculator on',
+      linkHint: 'Scan this QR code with a phone camera, or copy the link and send it on WhatsApp.',
+      copy: 'Copy link', copied: 'Link copied.', copyFail: 'Press and hold the link to copy it.',
+      tryIt: 'Check your own scheme:',
+      adv: 'For experts: model settings', advReset: 'Reset to this scheme type\'s settings',
+      disclaimer: 'This is an estimate from a model, not financial advice. Before putting money into any company, check it on secp.gov.pk.',
+      logosNote: 'Bank names and logos are shown only to identify them. This calculator is not linked to any bank.',
+      months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+      share: '*Scheme Check*',
+      money: function (n) {
+        n = Math.max(0, n);
+        n = n >= 100000 ? Math.round(n / 1000) * 1000 : n >= 1000 ? Math.round(n / 100) * 100 : Math.round(n);
+        return 'Rs ' + n.toLocaleString('en-IN');
+      },
+      monthCount: function (n) { return n === 1 ? '1 month' : n + ' months'; },
+      ratesDate: function (d, m, y, policy) { return 'Bank rates as of ' + d + ' ' + m + ' ' + y + '. SBP policy rate ' + policy + '%. Tax rates still to be verified.'; },
+      l1: function (when) { return 'This scheme will run out of money by ' + b(when) + ' at the latest.'; },
+      l1s: 'Most schemes like this shut down even earlier.',
+      l2All: function (amt) { return 'If you put in ' + b(amt) + ', you will lose ' + b('almost all of it') + '.'; },
+      l2Loss: function (amt, loss) { return 'If you put in ' + b(amt) + ', you will lose about ' + b(loss) + '.'; },
+      l2Gain: function (rec) { return 'You might get ' + b(rec) + ' back, but that profit comes from money other people lose.'; },
+      l2s: function (tenths) {
+        return (tenths >= 10 ? 'Almost everyone in this scheme will lose money.' : tenths + ' out of every 10 people in this scheme will lose money.') +
+          ' Late joiners lose almost everything.';
+      },
+      inv2: function (rec, risk, est) { return 'You have got back ' + (est ? 'about ' : '') + b(rec) + ' so far. ' + b(risk) + ' of your money is still at risk.'; },
+      inv2Back: function (rec, est) { return 'You have already got back ' + (est ? 'about ' : '') + b(rec) + ', more than you put in. Don\'t put in any more.'; },
+      inv2s: function (tenths) {
+        return 'Take out whatever you can now. ' +
+          (tenths >= 10 ? 'Almost everyone in this scheme will lose money.' : tenths + ' out of every 10 people in this scheme will lose money.');
+      },
+      overdue1: 'By the numbers, this scheme ' + b('should already have run out of money') + '. Do not put in new money.',
+      overdueAlready1: 'By the numbers, this scheme ' + b('should already have run out of money') + '. Take your money out as soon as you can.',
+      overdueSub: 'When a scheme runs longer than it should, money put in now is at the highest risk.',
+      overdue2: function (amt) { return 'If you put in ' + b(amt) + ', you could lose almost all of it.'; },
+      secp1: 'At this return, the numbers alone cannot tell. Before investing, check on ' + b('secp.gov.pk') + ' whether this company is allowed to take money from the public.',
+      secpSub: 'Being a registered company is not enough. Check the warning signs below too.',
+      l3: function (amt, bank, type, months, profit, tax) {
+        return 'Put the same ' + b(amt) + ' in ' + type + ' at ' + bank + ' for ' + b(months) + ' and you would earn about ' + b(profit) + tax + ', and your money stays safe.';
+      },
+      l3Past: function (amt, bank, type, months, profit, tax) {
+        return 'Had you put the same ' + b(amt) + ' in ' + type + ' at ' + bank + ' ' + b(months) + ' ago, you would have earned about ' + b(profit) + tax + ' by now, and your money would be safe.';
+      }
+    }
+  };
+
+  var state = { lang: 'ur', mode: 'think', scheme: 'other', freq: 'monthly', unit: 'days', rateUnit: 'pct', bank: null, type: 'savings', tax: 'nonfiler', flags: {} };
+  var last = null; // { r, input, params, example, got }
+  function L() { return T[state.lang]; }
+
+  // ---------- helpers ----------
+  function toNumber(s) {
+    s = String(s || '')
+      .replace(/[۰-۹]/g, function (d) { return d.charCodeAt(0) - 0x06F0; })
+      .replace(/[٠-٩]/g, function (d) { return d.charCodeAt(0) - 0x0660; })
+      .replace(/[٫،]/g, '.')
+      .replace(/[^\d.]/g, '');
+    var n = parseFloat(s);
+    return isFinite(n) ? n : NaN;
+  }
+  function pressed(group, value) {
+    Array.prototype.forEach.call($(group).querySelectorAll('[data-v]'), function (c) {
+      c.setAttribute('aria-pressed', c.getAttribute('data-v') === value ? 'true' : 'false');
+    });
+  }
+  function onChip(group, fn) {
+    $(group).addEventListener('click', function (e) {
+      var c = e.target.closest('[data-v]');
+      if (c && !c.disabled) fn(c.getAttribute('data-v'), c);
+    });
+  }
+  function load() { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { return {}; } }
+  function bankById(id) { for (var i = 0; i < BANKS.list.length; i++) if (BANKS.list[i].id === id) return BANKS.list[i]; return null; }
+  function bankName(bk) { return state.lang === 'ur' ? bk.ur : bk.en; }
+  var INPUTS = ['amount', 'rate', 'period', 'age', 'ago', 'got'];
+
+  function save() {
+    var data = {
+      lang: state.lang, mode: state.mode, scheme: state.scheme, freq: state.freq, unit: state.unit, rateUnit: state.rateUnit,
+      bank: state.bank, type: state.type, tax: state.tax, adv: readAdv()
+    };
+    var old = load();
+    INPUTS.forEach(function (k) {
+      if (last && !last.example) { if ($(k).value) data[k] = $(k).value; }
+      else if (old[k]) data[k] = old[k];
+    });
+    try { localStorage.setItem(STORE, JSON.stringify(data)); } catch (e) { /* storage blocked: fine */ }
+  }
+
+  // ---------- language ----------
+  function setLang(lang) {
+    state.lang = lang;
+    app.setAttribute('lang', lang);
+    app.setAttribute('dir', lang === 'ur' ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', lang === 'ur' ? 'rtl' : 'ltr');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) {
+      el.textContent = L()[el.getAttribute('data-t')];
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.lang [data-lang]'), function (btn) {
+      btn.setAttribute('aria-pressed', btn.getAttribute('data-lang') === lang ? 'true' : 'false');
+    });
+    var c = BANKS.checked.split('-');
+    $('ratesDate').textContent = L().ratesDate(Number(c[2]), L().months[Number(c[1]) - 1], c[0], BANKS.policyRate);
+    setMode(state.mode);
+    setFreq(state.freq);
+    buildBankGrid();
+    buildFlags();
+    showAmountWords();
+    setListening(false);
+    if (last) render();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.lang [data-lang]'), function (btn) {
+    btn.addEventListener('click', function () { stopSpeaking(); setLang(btn.getAttribute('data-lang')); save(); });
+  });
+
+  // ---------- mode: thinking of investing / already invested ----------
+  function setMode(mode) {
+    state.mode = mode; pressed('modeChips', mode);
+    $('amountLabel').textContent = mode === 'already' ? L().qAmountAlready : L().qAmount;
+    $('bankLabel').textContent = mode === 'already' ? L().qBankAlready : L().qBank;
+    $('alreadyBox').classList.toggle('hidden', mode !== 'already');
+  }
+  onChip('modeChips', function (m) { setMode(m); if (last) { last = null; $('result').classList.add('hidden'); } save(); });
+
+  // ---------- scheme type ----------
+  function setScheme(type, fill) {
+    state.scheme = type; pressed('typeTiles', type);
+    fillAdv(Model.typeParams(type));
+    var pre = Model.TYPES[type] && Model.TYPES[type].preset;
+    if (!fill || !pre) return;
+    setFreq(pre.freq);
+    if (pre.freq === 'lump') { $('period').value = pre.period; setUnit(pre.unit); }
+    setRateFromFraction(pre.rate);
+  }
+  onChip('typeTiles', function (type) { setScheme(type, true); showRateWords(); save(); });
+
+  // ---------- inputs ----------
+  function showAmountWords() {
+    var n = toNumber($('amount').value);
+    $('amountWords').textContent = n > 0 ? '= ' + L().money(n) : '';
+    showRateWords();
+  }
+  $('amount').addEventListener('input', showAmountWords);
+  onChip('amountChips', function (v) { $('amount').value = v; showAmountWords(); });
+
+  function setFreq(f) {
+    state.freq = f; pressed('freqChips', f);
+    var words = (state.rateUnit === 'rs' ? L().rateRs : L().rate)[f];
+    $('rateLabel').textContent = words[0];
+    $('rateHint').textContent = words[1];
+    $('rateUnit').textContent = state.rateUnit === 'rs' ? L().rs : '%';
+    $('lumpChips').classList.toggle('hidden', f !== 'lump');
+    $('periodBox').classList.toggle('hidden', f !== 'lump');
+    showRateWords();
+  }
+  onChip('freqChips', setFreq);
+  function setUnit(u) { state.unit = u; pressed('unitChips', u); }
+  onChip('unitChips', setUnit);
+
+  // The promise as a fraction for the model: 0.1 = 10% per period; for a lump sum, the total gain.
+  function rateFraction() {
+    var raw = toNumber($('rate').value), amount = toNumber($('amount').value);
+    if (!(raw > 0)) return NaN;
+    if (state.rateUnit === 'pct') return raw / 100;
+    if (!(amount > 0)) return NaN;
+    return state.freq === 'lump' ? raw / amount - 1 : raw / amount;
+  }
+  function setRateFromFraction(f) {
+    var amount = toNumber($('amount').value);
+    if (state.rateUnit === 'pct') { $('rate').value = pctText(f); return; }
+    $('rate').value = amount > 0 ? String(Math.round(amount * (state.freq === 'lump' ? 1 + f : f))) : '';
+  }
+  function showRateWords() {
+    var f = rateFraction(), amount = toNumber($('amount').value), l = L(), text = '';
+    if (f > 0 && amount > 0) {
+      if (state.rateUnit === 'rs') text = state.freq === 'lump' ? l.convLumpPct(pctText(f)) : l.convPct(pctText(f), l.per[state.freq]);
+      else text = state.freq === 'lump' ? l.convLumpRs(l.money(amount * (1 + f))) : l.convRs(l.money(amount * f), l.per[state.freq]);
+    }
+    $('rateWords').textContent = text;
+  }
+  $('rate').addEventListener('input', showRateWords);
+  onChip('rateUnitChips', function (u) {
+    if (u === state.rateUnit) return;
+    var f = rateFraction();
+    state.rateUnit = u; pressed('rateUnitChips', u);
+    if (f > 0) setRateFromFraction(f); else $('rate').value = '';
+    setFreq(state.freq);
+  });
+  onChip('lumpChips', function (v) {
+    setRateFromFraction(Number(v) - 1);
+    showRateWords();
+  });
+
+  // ---------- bank question (asked after the result) ----------
+  function buildBankGrid() {
+    var grid = $('bankGrid');
+    grid.textContent = '';
+    BANKS.list.forEach(function (bk) {
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'bank'; btn.setAttribute('data-v', bk.id);
+      btn.setAttribute('aria-pressed', state.bank === bk.id ? 'true' : 'false');
+      var logo = document.createElement('span');
+      logo.className = 'logo';
+      logo.setAttribute('aria-hidden', 'true');
+      if (LOGOS[bk.id]) {
+        var img = document.createElement('img'); img.src = LOGOS[bk.id]; img.alt = '';
+        logo.classList.add('has-img'); logo.appendChild(img);
+      } else {
+        logo.textContent = bk.mark;
+      }
+      var name = document.createElement('span');
+      name.className = 'bname'; name.textContent = bankName(bk);
+      btn.appendChild(logo); btn.appendChild(name);
+      grid.appendChild(btn);
+    });
+  }
+  onChip('bankGrid', function (id) { state.bank = id; pressed('bankGrid', id); renderBank(); updateShare(); save(); });
+  onChip('typeChips', function (type) { state.type = type; renderBank(); updateShare(); save(); });
+  onChip('taxChips', function (tax) { state.tax = tax; renderBank(); updateShare(); save(); });
+
+  function taxRate(bk) {
+    if (state.tax === 'none') return 0;
+    return BANKS.tax[bk.taxGroup || 'bank'][state.tax];
+  }
+
+  function renderBank() {
+    var bk = bankById(state.bank);
+    $('bankMore').classList.toggle('hidden', !bk);
+    $('l3box').classList.toggle('hidden', !bk || !last);
+    if (!bk) return;
+    Array.prototype.forEach.call($('typeChips').querySelectorAll('.chip'), function (c) {
+      c.disabled = !bk[c.getAttribute('data-v')];
+    });
+    if (!bk[state.type]) state.type = bk.savings ? 'savings' : bk.islamic ? 'islamic' : 'fixed';
+    pressed('typeChips', state.type);
+    pressed('taxChips', state.tax);
+    var product = bk[state.type], tax = taxRate(bk), l = L();
+    $('bankRate').innerHTML = l.rateNote(product, tax) + ' · <bdi>' + product.product + '</bdi>';
+    if (!last) return;
+    var r = last.r, amount = last.input.amount, inv = r.invested, past = inv && last.input.monthsAgo > 0;
+    var held = past ? last.input.monthsAgo
+      : inv ? Math.max(1, inv.monthsLeft)
+      : r.verdict === 'collapse' ? Math.max(1, r.family.monthsLeft) : 12;
+    var profit = amount * product.rate / 100 * held / 12 * (1 - tax / 100);
+    var args = [l.money(amount), bankName(bk), l.typeName[state.type], l.monthCount(held), l.money(profit), tax ? l.afterTax : ''];
+    $('l3').innerHTML = (past ? l.l3Past : l.l3).apply(null, args);
+  }
+
+  // ---------- warning signs ----------
+  function buildFlags() {
+    var box = $('flags'), l = L();
+    box.textContent = '';
+    l.flagQs.forEach(function (q, i) {
+      var row = document.createElement('div'); row.className = 'flag';
+      var p = document.createElement('p'); p.textContent = q;
+      var seg = document.createElement('div'); seg.className = 'seg'; seg.setAttribute('role', 'group');
+      ['yes', 'no'].forEach(function (v) {
+        var btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'chip'; btn.setAttribute('data-v', v); btn.setAttribute('data-i', i);
+        btn.setAttribute('aria-pressed', state.flags[i] === v ? 'true' : 'false');
+        btn.textContent = l[v];
+        seg.appendChild(btn);
+      });
+      row.appendChild(p); row.appendChild(seg); box.appendChild(row);
+    });
+    renderLevel();
+  }
+  $('flags').addEventListener('click', function (e) {
+    var c = e.target.closest('[data-i]'); if (!c) return;
+    var i = c.getAttribute('data-i'), v = c.getAttribute('data-v');
+    state.flags[i] = state.flags[i] === v ? undefined : v;
+    Array.prototype.forEach.call(c.parentNode.children, function (s) {
+      s.setAttribute('aria-pressed', state.flags[i] === s.getAttribute('data-v') ? 'true' : 'false');
+    });
+    renderLevel(); updateShare();
+  });
+  var LEVEL_ICONS = {
+    none: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    some: '<path d="M12 3.5l9.5 17h-19z"/><path d="M12 10v4.5M12 17.5v.5"/>',
+    high: '<circle cx="12" cy="12" r="9.5"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/>'
+  };
+  function renderLevel() {
+    var answered = 0, yes = 0, l = L(), box = $('level');
+    Object.keys(state.flags).forEach(function (k) { if (state.flags[k]) { answered++; if (state.flags[k] === 'yes') yes++; } });
+    box.classList.toggle('hidden', !answered);
+    if (!answered) { box.removeAttribute('data-level'); return; }
+    var level = yes >= 3 ? 'high' : yes ? 'some' : 'none';
+    var text = level === 'high' ? l.flagHigh(yes, state.mode === 'already') : level === 'some' ? l.flagSome(yes) : l.flagNone;
+    box.setAttribute('data-level', level);
+    box.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + LEVEL_ICONS[level] + '</svg><span></span>';
+    box.querySelector('span').textContent = text;
+  }
+
+  // ---------- expert settings ----------
+  var ADV = ['g', 'M', 'k', 'q'];
+  function fillAdv(p) { ADV.forEach(function (key) { $('adv-' + key).value = p[key]; }); }
+  function readAdv() {
+    var base = Model.typeParams(state.scheme), p = {};
+    ADV.forEach(function (key) {
+      var v = toNumber($('adv-' + key).value);
+      p[key] = isNaN(v) ? base[key] : v;
+    });
+    p.g = Math.min(Math.max(p.g, 0.01), 1);
+    p.k = Math.min(Math.max(p.k, 0), 0.9);
+    p.q = Math.min(Math.max(p.q, 0), 0.95);
+    p.M = Math.max(p.M, 2);
+    return p;
+  }
+  $('advReset').addEventListener('click', function () { fillAdv(Model.typeParams(state.scheme)); });
+
+  // ---------- calculate ----------
+  function fail(key, field) {
+    $('err').textContent = L()[key]; $('result').classList.add('hidden'); $('detail').textContent = '';
+    if (field) $(field).focus();
+  }
+
+  function calculate(opts) {
+    opts = opts || {};
+    $('err').textContent = '';
+    var amount = toNumber($('amount').value);
+    if (!(amount > 0)) return opts.quiet || fail('errAmount', 'amount');
+    if (!(toNumber($('rate').value) > 0)) return opts.quiet || fail('errRate', 'rate');
+    var rate = rateFraction();
+    if (!(rate > 0)) return opts.quiet || fail(state.rateUnit === 'rs' && state.freq === 'lump' ? 'errBack' : 'errRate', 'rate');
+    var lumpMonths = null;
+    if (state.freq === 'lump') {
+      var n = toNumber($('period').value);
+      if (!(n > 0)) return opts.quiet || fail('errPeriod', 'period');
+      lumpMonths = state.unit === 'days' ? n / (365 / 12) : n;
+    }
+    var ageText = $('age').value.trim();
+    var age = ageText ? Math.round(toNumber(ageText)) : null;
+    if (ageText && !(age >= 0)) age = null;
+    var ago = null, got = null;
+    if (state.mode === 'already') {
+      ago = Math.round(toNumber($('ago').value));
+      if (!($('ago').value.trim() && ago >= 0)) return opts.quiet || fail('errAgo', 'ago');
+      var gotText = $('got').value.trim();
+      got = gotText ? toNumber(gotText) : null;
+      if (got !== null && !(got >= 0)) got = null;
+    }
+
+    var params = readAdv();
+    // The verdict uses the reference savings rate, so it doesn't change with the bank picked afterwards.
+    var input = {
+      amount: amount, rate: rate, freq: state.freq, lumpMonths: lumpMonths,
+      bankAnnual: BANKS.reference / 100, schemeAgeMonths: age, monthsAgo: ago
+    };
+    last = { r: Model.analyse(input, params), input: input, params: params, example: !!opts.example, got: got };
+    render();
+    if (opts.scroll) $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!opts.example) save();
+  }
+
+  function render() {
+    var r = last.r, input = last.input, l = L(), inv = r.invested;
+    var l1 = '', l1s = '', l2 = '', l2s = '', showL2 = true;
+    var amt = l.money(input.amount);
+    var tenths = r.sim ? tenthsOf(r.sim.behindShare) : 0;
+
+    if (inv) {
+      var est = last.got === null, rec = est ? inv.receivedSoFar : last.got, risk = Math.max(0, input.amount - rec);
+      if (r.verdict === 'overdue') { l1 = l.overdueAlready1; l1s = l.overdueSub; }
+      else {
+        var d0 = Model.collapseDate(new Date(), inv.monthsLeft);
+        l1 = l.l1(l.months[d0.month - 1] + ' ' + d0.year); l1s = l.l1s;
+      }
+      l2 = risk > 0 ? l.inv2(l.money(rec), l.money(risk), est) : l.inv2Back(l.money(rec), est);
+      l2s = l.inv2s(tenths);
+    } else if (r.verdict === 'collapse') {
+      var f = r.family, d = Model.collapseDate(new Date(), f.monthsLeft);
+      l1 = l.l1(l.months[d.month - 1] + ' ' + d.year);
+      l1s = l.l1s;
+      if (f.loss >= 0.95 * input.amount) l2 = l.l2All(amt);
+      else if (f.loss > 0) l2 = l.l2Loss(amt, l.money(f.loss));
+      else l2 = l.l2Gain(l.money(f.received));
+      l2s = l.l2s(tenths);
+    } else if (r.verdict === 'overdue') {
+      l1 = l.overdue1; l1s = l.overdueSub; l2 = l.overdue2(amt);
+    } else {
+      l1 = l.secp1; l1s = l.secpSub; showL2 = false;
+    }
+
+    $('exampleTag').classList.toggle('hidden', !last.example);
+    $('l1').innerHTML = l1; $('l1s').textContent = l1s;
+    $('l2').innerHTML = l2; $('l2s').textContent = l2s;
+    $('l2box').classList.toggle('hidden', !showL2);
+    $('why').classList.add('hidden'); $('whyBtn').setAttribute('aria-expanded', 'false');
+    $('whyBtn').classList.toggle('hidden', r.verdict === 'check-secp');
+    $('voiceNote').classList.add('hidden');
+    $('result').classList.remove('hidden');
+    pressed('bankGrid', state.bank);
+    renderChart();
+    renderBank();
+    renderLevel();
+    updateShare();
+
+    // Expert detail: the raw model numbers behind the lines.
+    var s = r.schedule, p = last.params, lines = [
+      'scheme type: ' + state.scheme + '  |  promise entered as ' + (state.rateUnit === 'rs' ? 'rupees' : 'percent'),
+      'schedule: pay ' + (s.pay * 100).toFixed(2) + '% every ' + s.every + ' mo' + (s.lump ? ' (once)' : ''),
+      'monthly-equivalent promise: ' + (Model.monthlyRate(s) * 100).toFixed(2) + '%  |  reference bank rate: ' + BANKS.reference + '%/yr',
+      'g=' + p.g + '  M=' + p.M + '  k=' + p.k + '  q=' + p.q,
+      'verdict: ' + r.verdict
+    ];
+    if (r.sim) lines.push('collapse month C=' + r.sim.collapseMonth + '  money lost ' + Math.round(r.sim.lossShare * 100) + '%  behind ' + Math.round(r.sim.behindShare * 100) + '%');
+    if (r.family) lines.push('join J=' + r.family.joinMonth + (r.ageKnown ? ' (known age)' : ' (typical joiner)') + '  months left ' + r.family.monthsLeft + '  received ' + Math.round(r.family.received) + '  loss ' + Math.round(r.family.loss));
+    if (inv) lines.push('already in: joined month ' + inv.joinMonth + ', now month ' + inv.nowMonth + ', due so far ' + Math.round(inv.receivedSoFar) + ', still promised ' + Math.round(inv.stillToCome));
+    $('detail').textContent = lines.join('\n');
+  }
+
+  // ---------- money tank chart ----------
+  function el(name, attrs, text) {
+    var node = document.createElementNS(SVG, name);
+    for (var k in attrs) node.setAttribute(k, attrs[k]);
+    if (text != null) node.textContent = text;
+    return node;
+  }
+  var chart = null;
+  function renderChart() {
+    var r = last.r, svg = $('tankSvg'), l = L();
+    var show = !!r.sim && (r.verdict === 'collapse' || r.verdict === 'overdue');
+    $('tank').classList.toggle('hidden', !show);
+    chart = null;
+    if (!show) return;
+    var C = r.sim.collapseMonth, led = r.sim.ledger;
+    var you = r.invested ? r.invested.nowMonth : r.family ? r.family.joinMonth : r.sim.typicalJoinMonth;
+    if (r.verdict === 'overdue' && !r.invested) you = Math.max(C, last.input.schemeAgeMonths || C);
+    var vals = [];
+    for (var t = 0; t <= C; t++) vals.push(t < C ? Math.max(0, led[t].pool - led[t].due) : 0);
+    var maxV = Math.max.apply(null, vals) || 1, end = Math.max(C, you, 1);
+    var W = 320, H = 170, PL = 18, PR = 18, PT = 34, PB = 38, rtl = state.lang === 'ur';
+    function x(m) { var v = PL + (W - PL - PR) * m / end; return rtl ? W - v : v; }
+    function y(v) { return PT + (H - PT - PB) * (1 - v / maxV); }
+    function anchorAt(px) { return px < 60 ? 'start' : px > W - 60 ? 'end' : 'middle'; }
+    function when(m) { var d = Model.collapseDate(new Date(), m - you); return l.months[d.month - 1] + ' ' + d.year; }
+
+    var path = vals.map(function (v, m) { return (m ? 'L' : 'M') + x(m).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' ');
+    var base = y(0);
+    svg.textContent = '';
+    svg.setAttribute('aria-label', l.chartAria(when(C)));
+    svg.appendChild(el('path', { 'class': 'tk-area', d: path + ' L' + x(C).toFixed(1) + ' ' + base + ' L' + x(0).toFixed(1) + ' ' + base + ' Z' }));
+    svg.appendChild(el('line', { 'class': 'tk-base', x1: x(0), x2: x(end), y1: base, y2: base }));
+    svg.appendChild(el('path', { 'class': 'tk-line', d: path }));
+    svg.appendChild(el('text', { x: x(0), y: base + 24, 'text-anchor': anchorAt(x(0)) }, l.chartStart));
+    var hover = el('line', { 'class': 'tk-hover hidden', y1: PT - 4, y2: base });
+    var dot = el('circle', { 'class': 'tk-dot hidden', r: 4 });
+    svg.appendChild(hover); svg.appendChild(dot);
+    svg.appendChild(el('line', { 'class': 'tk-today', x1: x(you), x2: x(you), y1: PT - 10, y2: base }));
+    svg.appendChild(el('text', { 'class': 'tk-today-label', x: x(you), y: PT - 16, 'text-anchor': anchorAt(x(you)) }, l.chartToday));
+    svg.appendChild(el('circle', { 'class': 'tk-end', cx: x(C), cy: base, r: 6 }));
+    svg.appendChild(el('text', { 'class': 'tk-end-label', x: x(C), y: base + 24, 'text-anchor': anchorAt(x(C)) }, when(C)));
+    $('tankTip').textContent = l.chartCaption;
+    chart = { x: x, y: y, vals: vals, C: C, end: end, rtl: rtl, W: W, PL: PL, PR: PR, maxV: maxV, when: when, hover: hover, dot: dot };
+  }
+  function chartHover(e) {
+    if (!chart) return;
+    var svg = $('tankSvg'), box = svg.getBoundingClientRect();
+    var px = (e.clientX - box.left) * chart.W / box.width;
+    var frac = ((chart.rtl ? chart.W - px : px) - chart.PL) / (chart.W - chart.PL - chart.PR);
+    var m = Math.round(Math.min(1, Math.max(0, frac)) * chart.end);
+    if (m > chart.C) m = chart.C;
+    var v = chart.vals[m];
+    chart.hover.setAttribute('x1', chart.x(m)); chart.hover.setAttribute('x2', chart.x(m));
+    chart.dot.setAttribute('cx', chart.x(m)); chart.dot.setAttribute('cy', chart.y(v));
+    chart.hover.classList.remove('hidden'); chart.dot.classList.remove('hidden');
+    $('tankTip').textContent = L().chartTip(chart.when(m), Math.round(v / chart.maxV * 100));
+  }
+  $('tankSvg').addEventListener('pointermove', chartHover);
+  $('tankSvg').addEventListener('pointerdown', chartHover);
+  $('tankSvg').addEventListener('pointerleave', function () {
+    if (!chart) return;
+    chart.hover.classList.add('hidden'); chart.dot.classList.add('hidden');
+    $('tankTip').textContent = L().chartCaption;
+  });
+
+  // ---------- read aloud ----------
+  function spokenText() {
+    var parts = [];
+    ['l1', 'l1s', 'l2', 'l2s', 'l3'].forEach(function (id) {
+      var node = $(id);
+      if (node.textContent.trim() && !node.closest('.hidden')) parts.push(node.textContent.trim());
+    });
+    if (!$('level').classList.contains('hidden')) parts.push($('level').textContent.trim());
+    return parts.join(' ');
+  }
+  function setListening(on) {
+    $('listenText').textContent = on ? L().stop : L().listen;
+    $('listenBtn').setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function stopSpeaking() { try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { /* ignore */ } setListening(false); }
+  $('listenBtn').addEventListener('click', function () {
+    var synth = window.speechSynthesis;
+    if (!synth || typeof SpeechSynthesisUtterance === 'undefined') { $('voiceNote').classList.remove('hidden'); return; }
+    if (synth.speaking) { stopSpeaking(); return; }
+    var lang = state.lang, voices = synth.getVoices();
+    var voice = voices.filter(function (v) { return v.lang.toLowerCase().indexOf(lang) === 0; })[0];
+    $('voiceNote').classList.toggle('hidden', !!voice || !voices.length);
+    var u = new SpeechSynthesisUtterance(spokenText());
+    u.lang = lang === 'ur' ? 'ur-PK' : 'en-IN';
+    if (voice) u.voice = voice;
+    u.rate = 0.9;
+    u.onend = function () { setListening(false); };
+    u.onerror = function () { setListening(false); if (!voice) $('voiceNote').classList.remove('hidden'); };
+    setListening(true);
+    synth.speak(u);
+  });
+  if (window.speechSynthesis) window.speechSynthesis.getVoices();
+
+  $('form').addEventListener('submit', function (e) { e.preventDefault(); stopSpeaking(); calculate({ scroll: true }); });
+  $('whyBtn').addEventListener('click', function () {
+    var open = $('why').classList.toggle('hidden') === false;
+    this.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  // ---------- sharing ----------
+  function updateShare() {
+    var parts = [];
+    ['l1', 'l1s', 'l2', 'l2s', 'l3'].forEach(function (id) {
+      var node = $(id);
+      if (node.textContent.trim() && !node.closest('.hidden')) parts.push(node.textContent.trim());
+    });
+    if (!$('level').classList.contains('hidden')) parts.push($('level').textContent.trim());
+    if (SITE && SITE.url) parts.push(L().tryIt + ' ' + SITE.url);
+    $('waBtn').href = 'https://wa.me/?text=' + encodeURIComponent(L().share + '\n\n' + parts.join('\n\n'));
+  }
+
+  function downloadSelf() {
+    var url = URL.createObjectURL(new Blob([SELF_HTML], { type: 'text/html' }));
+    var a = document.createElement('a');
+    a.href = url; a.download = 'scheme-check.html';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1500);
+  }
+  $('shareApp').addEventListener('click', function () {
+    var file = null;
+    try { file = new File([SELF_HTML], 'scheme-check.html', { type: 'text/html' }); } catch (e) { /* old browser */ }
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'Scheme Check' }).catch(function () {});
+    } else {
+      downloadSelf();
+    }
+  });
+
+  // ---------- start ----------
+  var saved = load();
+  INPUTS.forEach(function (id) { if (saved[id]) $(id).value = saved[id]; });
+  state.mode = saved.mode === 'already' ? 'already' : 'think';
+  state.scheme = Model.TYPES[saved.scheme] ? saved.scheme : 'other';
+  state.freq = saved.freq || 'monthly';
+  state.rateUnit = saved.rateUnit === 'rs' ? 'rs' : 'pct';
+  setUnit(saved.unit || 'days');
+  state.bank = bankById(saved.bank) ? saved.bank : null;
+  state.type = saved.type || 'savings';
+  state.tax = saved.tax || 'nonfiler';
+  pressed('typeTiles', state.scheme);
+  pressed('rateUnitChips', state.rateUnit);
+  fillAdv(saved.adv || Model.typeParams(state.scheme));
+  if (saved.age) $('ageBox').open = true;
+  setLang(saved.lang === 'en' ? 'en' : 'ur');
+
+  // Hosted on the web, the page's link is what people share; saving a file is blocked there.
+  if (document.querySelector('meta[name="claude:viewport-fit-sides"]')) $('shareCard').classList.add('hidden');
+
+  // "Pass it on" card: QR code and public link, once the site exists.
+  if (SITE && SITE.url) {
+    $('linkCard').classList.remove('hidden');
+    $('qrImg').src = SITE.qr;
+    $('siteUrl').href = SITE.url;
+    $('siteUrl').textContent = SITE.url.replace(/^https:\/\//, '');
+    $('copyLink').addEventListener('click', function () {
+      function note(key) { $('copyNote').textContent = L()[key]; }
+      function select() {
+        var range = document.createRange(), sel = window.getSelection();
+        range.selectNodeContents($('siteUrl')); sel.removeAllRanges(); sel.addRange(range);
+        note('copyFail');
+      }
+      try { navigator.clipboard.writeText(SITE.url).then(function () { note('copied'); }, select); } catch (e) { select(); }
+    });
+  }
+
+  if (saved.amount) {
+    calculate({ quiet: true });
+  } else {
+    // First open: a worked example so the page explains itself.
+    $('amount').value = '100000'; $('rate').value = '10'; setFreq('monthly'); showAmountWords();
+    calculate({ example: true });
+  }
+})();
+</script>
+</body>
+</html>

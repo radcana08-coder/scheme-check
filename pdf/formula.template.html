@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scheme Collapse Model: Formula Specification</title>
+<style>
+  @page { size: A4; margin: 18mm 17mm 18mm 17mm; }
+  :root { --ink: #1c2430; --muted: #5d6877; --line: #d5dbe3; --soft: #f3f5f8; --accent: #0f5c4a; --bad: #b3261e; --warn: #9a6200; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, 'Cambria', 'Times New Roman', serif; color: var(--ink); font-size: 10.4pt; line-height: 1.5; margin: 0; background: #fff; }
+  h1 { font-size: 21pt; margin: 0 0 4pt; line-height: 1.2; letter-spacing: -0.2pt; }
+  h2 { font-size: 13.5pt; margin: 20pt 0 6pt; padding-bottom: 3pt; border-bottom: 1.5pt solid var(--accent); color: var(--accent); break-after: avoid; }
+  h3 { font-size: 11pt; margin: 12pt 0 4pt; break-after: avoid; }
+  p { margin: 0 0 7pt; }
+  .sub { color: var(--muted); font-size: 10pt; margin-bottom: 12pt; }
+  .status { border: 1pt solid var(--warn); background: #fff8ec; padding: 8pt 10pt; border-radius: 3pt; font-size: 9.6pt; margin: 10pt 0; }
+  table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 9pt; break-inside: auto; }
+  tr { break-inside: avoid; }
+  th, td { border: 0.6pt solid var(--line); padding: 3.5pt 5pt; text-align: left; vertical-align: top; }
+  th { background: var(--soft); font-weight: bold; }
+  td.num, .numt td { text-align: right; font-variant-numeric: tabular-nums; }
+  .numt td:first-child { text-align: left; }
+  .gap td { text-align: center; color: var(--muted); padding: 0; border-left: none; border-right: none; }
+  tr.bad td { background: #fbeceb; color: var(--bad); font-weight: bold; }
+  tr.warn td { background: #fff4df; }
+  td.hl { background: #e2f1ec; font-weight: bold; }
+  .muted { color: var(--muted); }
+  .small { font-size: 7.8pt; color: var(--muted); line-height: 1.3; }
+  .eq { background: var(--soft); border-left: 3pt solid var(--accent); padding: 6pt 10pt; margin: 6pt 0 8pt; font-size: 10.6pt; break-inside: avoid; }
+  .eq .n { float: right; color: var(--muted); font-style: normal; }
+  .eq div { margin: 2pt 0; }
+  var, .v { font-style: italic; font-family: 'Cambria Math', Cambria, Georgia, serif; }
+  .ur, .urdu { font-family: 'Urdu Typesetting', 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', 'Segoe UI', sans-serif; direction: rtl; unicode-bidi: isolate; }
+  .urdu { font-size: 14pt; line-height: 1.9; display: block; text-align: right; }
+  .gloss { font-size: 8.8pt; color: var(--muted); display: block; margin-bottom: 4pt; }
+  ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin-bottom: 2pt; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; }
+  .box { border: 0.8pt solid var(--line); border-radius: 3pt; padding: 7pt 9pt; break-inside: avoid; }
+  .pb { break-before: page; }
+  code { font-family: Consolas, monospace; font-size: 9pt; background: var(--soft); padding: 0 2pt; }
+  .foot { margin-top: 18pt; font-size: 8.5pt; color: var(--muted); border-top: 0.6pt solid var(--line); padding-top: 6pt; }
+</style>
+</head>
+<body>
+
+<h1>Scheme Collapse Model: Formula Specification</h1>
+<div class="sub">Core formula, variables, defaults and data sources for the Urdu scheme calculator &middot; Version 0.1 (demo) &middot; 15 October 2026 &middot; Engine file: <code>formula.js</code></div>
+
+<div class="status"><b>Status.</b> This document specifies the model the calculator uses. The recruitment parameters (<var>g</var>, <var>M</var>, <var>k</var>, <var>q</var>) are <b>placeholders that have not been calibrated</b> against real collapsed schemes. Results below show how the model behaves. They are not findings. Until a methods note with calibration exists, do not describe the tool as "based on a paper".</div>
+
+<h2>1. What the model answers</h2>
+<p>The user gives three numbers: <b>the amount</b> they would put in, <b>the promised return</b>, and <b>how often it pays</b>. The model answers in three lines:</p>
+<ol>
+  <li><b>When</b> the scheme's money runs out (a calendar month, shown as "at the latest").</li>
+  <li><b>How much</b> a family joining now would lose.</li>
+  <li><b>What the same money would earn</b> in a bank or National Savings product. The calculator asks which bank only after lines 1 and 2 are shown, using a tile for each bank.</li>
+</ol>
+
+<h2>2. Core idea</h2>
+<ul>
+  <li>A scheme promising <var>r</var> per month owes <var>r</var> times the money it holds, every month.</li>
+  <li>It has no real income. Payouts can only come from new members' deposits.</li>
+  <li>Any city or network has a limited number of people with money, so recruitment slows as the market fills.</li>
+  <li>The first month the cash on hand cannot cover what is owed is the <b>collapse month</b>.</li>
+  <li>The family's own amount does not change the collapse date. It only scales their loss and the bank comparison.</li>
+</ul>
+<p>This is a simplified, step-by-step version of the Ponzi dynamics model in Artzrouni (2009). The differences are that this one runs in discrete monthly steps, recruitment is logistic, and payouts are cohort-based.</p>
+
+<h2>3. Variables and parameters</h2>
+<h3>3.1 Inputs</h3>
+<table>
+  <tr><th>Symbol</th><th>Name</th><th>Unit</th><th>Meaning</th><th>Source</th></tr>
+  <tr><td><var>A</var></td><td>Amount</td><td>Rs</td><td>Money the family would put in</td><td>User</td></tr>
+  <tr><td><var>r</var></td><td>Promised return</td><td>fraction per period</td><td>e.g. 0.05 = 5% per period. For a lump sum, the total gain (1.0 = money doubles)</td><td>User</td></tr>
+  <tr><td><var>f</var></td><td>Payout frequency</td><td>category</td><td>daily, weekly, monthly, quarterly, yearly, or lump sum</td><td>User</td></tr>
+  <tr><td><var>n</var></td><td>Lump-sum period</td><td>months</td><td>Time until the single payout (lump sum only). Days are converted at 365/12 days per month</td><td>User</td></tr>
+  <tr><td><var>a</var></td><td>Scheme age</td><td>months</td><td>How long the scheme has been running (optional; replaces the typical-joiner default)</td><td>User, optional</td></tr>
+  <tr><td><var>P</var><sub>Rs</sub></td><td>Promise in rupees</td><td>Rs</td><td>Alternative to <var>r</var>: rupees paid per period, or for a lump sum the total paid back. Converted with &sect;4a</td><td>User, optional</td></tr>
+  <tr><td><var>m</var><sub>a</sub>, <var>R</var><sub>u</sub></td><td>Already invested</td><td>months, Rs</td><td>How long ago the family put money in, and (optionally) how much they have received so far (&sect;8b)</td><td>User, "already invested" mode</td></tr>
+  <tr><td><var>&tau;</var></td><td>Tax on profit</td><td>fraction</td><td>Withholding tax for the bank comparison: filer, non-filer, or none (&sect;13)</td><td>User</td></tr>
+  <tr><td><var>b</var></td><td>Bank rate</td><td>fraction per year</td><td>Profit rate of the bank product the user picks after seeing lines 1 and 2, before tax</td><td>Bank table (&sect;13)</td></tr>
+</table>
+
+<h3>3.2 Model parameters</h3>
+<table>
+  <tr><th>Symbol</th><th>Name</th><th>Unit</th><th>Meaning</th><th>Default</th></tr>
+  <tr><td><var>g</var></td><td>Recruitment growth</td><td>per month</td><td>Growth rate of new money while the market is still empty</td><td>{{g}}</td></tr>
+  <tr><td><var>M</var></td><td>Market size</td><td>seed units</td><td>The most outside money the scheme can ever raise, as a multiple of its starting money</td><td>{{M}}</td></tr>
+  <tr><td><var>k</var></td><td>Operators' cut</td><td>fraction</td><td>Share of each new deposit the operators keep and never pay out</td><td>{{k}}</td></tr>
+  <tr><td><var>q</var></td><td>Reinvestment</td><td>fraction</td><td>Share of each payout members roll back in instead of taking as cash</td><td>{{q}}</td></tr>
+  <tr><td><var>&sigma;</var></td><td>SECP threshold</td><td>multiple</td><td>If the promised monthly return is at or below <var>&sigma;</var> &times; the bank's monthly rate, no date is shown</td><td>{{sigma}}</td></tr>
+  <tr><td><var>b</var><sub>ref</sub></td><td>Reference savings rate</td><td>fraction per year</td><td>Savings rate banks show small savers ({{ref}}%). Used only for the SECP test, so the verdict does not change with the bank picked</td><td>{{ref}}%</td></tr>
+  <tr><td><var>H</var></td><td>Horizon</td><td>months</td><td>Longest simulation before the model gives up</td><td>{{h}}</td></tr>
+</table>
+
+<h3>3.3 Derived quantities</h3>
+<table>
+  <tr><th>Symbol</th><th>Meaning</th></tr>
+  <tr><td><var>e</var>, <var>p</var></td><td>Payout rule: pay <var>p</var> &times; balance every <var>e</var> months (&sect;4)</td></tr>
+  <tr><td><var>t</var></td><td>Month number since the scheme started (<var>t</var> = 0 is the seed month)</td></tr>
+  <tr><td><var>D<sub>t</sub></var></td><td>New outside money deposited in month <var>t</var></td></tr>
+  <tr><td><var>E<sub>t</sub></var></td><td>Cumulative outside money raised up to and including month <var>t</var></td></tr>
+  <tr><td><var>P<sub>t</sub></var></td><td>Cash pool at the end of month <var>t</var></td></tr>
+  <tr><td><var>B<sub>i</sub></var>, <var>s<sub>i</sub></var></td><td>Balance and start month of cohort <var>i</var> (everyone who joined in the same month)</td></tr>
+  <tr><td><var>O<sub>t</sub></var></td><td>Cash owed to all cohorts in month <var>t</var></td></tr>
+  <tr><td><var>C</var></td><td>Collapse month</td></tr>
+  <tr><td><var>J</var></td><td>Month the family joins</td></tr>
+  <tr><td><var>R</var>, <var>L</var>, <var>&Pi;</var></td><td>Family's cash received, loss, and bank profit over the same months</td></tr>
+  <tr><td><var>E</var>*</td><td>Tipping point: money raised beyond which new cash no longer covers payouts</td></tr>
+</table>
+<p class="small">All money inside the simulation is measured in <b>seed units</b>: the scheme starts with 1. This makes the collapse month independent of the scheme's real size. Only <var>A</var> is in rupees.</p>
+
+<h2>4. Payout schedule conversion</h2>
+<p>The ledger moves one month at a time, so every promise is converted into "pay <var>p</var> &times; balance every <var>e</var> months":</p>
+<table>
+  <tr><th>User says</th><th><var>e</var> (months)</th><th><var>p</var></th><th>Note</th></tr>
+  <tr><td><var>r</var> per day</td><td>1</td><td><var>r</var> &times; 365/12</td><td>About 30.4 daily payouts summed into one month</td></tr>
+  <tr><td><var>r</var> per week</td><td>1</td><td><var>r</var> &times; 365/7/12</td><td>About 4.35 weekly payouts per month</td></tr>
+  <tr><td><var>r</var> per month</td><td>1</td><td><var>r</var></td><td></td></tr>
+  <tr><td><var>r</var> per quarter</td><td>3</td><td><var>r</var></td><td>Paid every third month</td></tr>
+  <tr><td><var>r</var> per year</td><td>12</td><td><var>r</var></td><td></td></tr>
+  <tr><td>gain <var>r</var> after <var>n</var> months</td><td>&lceil;<var>n</var>&rceil;</td><td>1 + <var>r</var></td><td>Paid once, principal included; then the deposit ends. 70 days &rarr; month 3</td></tr>
+</table>
+<div class="eq">
+  <div>owed<sub>i</sub>(<var>t</var>) = <var>p</var> &middot; <var>B<sub>i</sub></var> &nbsp; if (<var>t</var> &minus; <var>s<sub>i</sub></var>) is a positive multiple of <var>e</var> &nbsp; [lump sum: only if <var>t</var> &minus; <var>s<sub>i</sub></var> = <var>e</var>] <span class="n">(1)</span></div>
+  <div>owed<sub>i</sub>(<var>t</var>) = 0 &nbsp; otherwise</div>
+</div>
+<p>Monthly-equivalent promised rate, used only for the SECP test: <var>r</var><sub>m</sub> = <var>p</var>/<var>e</var> for periodic schedules, and (1 + <var>r</var>)<sup>1/<var>e</var></sup> &minus; 1 for lump sums.</p>
+
+<h2>5. The monthly ledger</h2>
+<p><b>Seed (t = 0):</b> <var>E</var><sub>0</sub> = 1, &nbsp; <var>P</var><sub>0</sub> = 1 &minus; <var>k</var>, &nbsp; one cohort with <var>B</var> = 1, <var>s</var> = 0.</p>
+<p><b>Then for each month t = 1, 2, 3, &hellip;</b></p>
+<div class="eq">
+  <div><b>New money</b> (logistic recruitment): &nbsp; <var>D<sub>t</sub></var> = <var>g</var> &middot; <var>E</var><sub>t&minus;1</sub> &middot; (1 &minus; <var>E</var><sub>t&minus;1</sub> / <var>M</var>) <span class="n">(2)</span></div>
+  <div><b>Money raised:</b> &nbsp; <var>E<sub>t</sub></var> = <var>E</var><sub>t&minus;1</sub> + <var>D<sub>t</sub></var> <span class="n">(3)</span></div>
+  <div><b>Pool after deposits:</b> &nbsp; <var>P&prime;<sub>t</sub></var> = <var>P</var><sub>t&minus;1</sub> + (1 &minus; <var>k</var>) &middot; <var>D<sub>t</sub></var> &nbsp; and a new cohort opens with <var>B</var> = <var>D<sub>t</sub></var>, <var>s</var> = <var>t</var> <span class="n">(4)</span></div>
+  <div><b>Cash due:</b> &nbsp; <var>O<sub>t</sub></var> = (1 &minus; <var>q</var>) &middot; &Sigma;<sub>i</sub> owed<sub>i</sub>(<var>t</var>) <span class="n">(5)</span></div>
+  <div><b>Collapse test:</b> &nbsp; if <var>P&prime;<sub>t</sub></var> &lt; <var>O<sub>t</sub></var> then <var>C</var> = <var>t</var> and stop <span class="n">(6)</span></div>
+  <div><b>Otherwise pay out:</b> &nbsp; <var>P<sub>t</sub></var> = <var>P&prime;<sub>t</sub></var> &minus; <var>O<sub>t</sub></var>; &nbsp; rolled-back money <var>q</var> &middot; owed<sub>i</sub> is added to <var>B<sub>i</sub></var> (a matured lump-sum cohort restarts with <var>B<sub>i</sub></var> = <var>q</var> &middot; owed<sub>i</sub>, <var>s<sub>i</sub></var> = <var>t</var>) <span class="n">(7)</span></div>
+</div>
+<p><b>Assumptions built into the ledger.</b> New members are not owed anything in the month they join. Members never withdraw their principal from periodic schemes. Whatever is left in the pool at collapse goes with the operators. With <var>g</var> &le; 1, equation (2) keeps <var>E<sub>t</sub></var> &le; <var>M</var> and <var>D<sub>t</sub></var> &ge; 0.</p>
+<div class="eq"><div><b>Accounting identity</b> (checked on every run): &nbsp; <var>E<sub>C</sub></var> = cash paid out + <var>k</var> &middot; <var>E<sub>C</sub></var> + <var>P&prime;<sub>C</sub></var> <span class="n">(8)</span></div></div>
+
+<h2>6. Why collapse is certain: the tipping point</h2>
+<p>Ignore the pool for a moment. For a monthly scheme, fresh cash covers the month's dues only while (1 &minus; <var>k</var>) &middot; <var>D<sub>t</sub></var> &ge; <var>r</var><sub>m</sub> &middot; <var>E</var>. Substituting (2):</p>
+<div class="eq">
+  <div>(1 &minus; <var>k</var>) &middot; <var>g</var> &middot; (1 &minus; <var>E</var>/<var>M</var>) &ge; <var>r</var><sub>m</sub></div>
+  <div>&rArr; &nbsp; <b><var>E</var>* / <var>M</var> = 1 &minus; <var>r</var><sub>m</sub> / ((1 &minus; <var>k</var>) &middot; <var>g</var>)</b> <span class="n">(9)</span></div>
+</div>
+<p>Before <var>E</var>*, the scheme takes in more than it pays and the pool grows. That growth is what makes it look healthy. After <var>E</var>*, every month pays out more than comes in, and the scheme lives on its saved pool until the pool runs out. If <var>r</var><sub>m</sub> &ge; (1 &minus; <var>k</var>)<var>g</var>, then <var>E</var>* = 0 and the scheme is underwater from the start. In plain terms: <b>once recruitment growth falls below the promised return, collapse is close.</b></p>
+<p>Because the model has no real business income, <b>any</b> positive return eventually collapses. That is why returns close to the bank rate get the SECP verdict (&sect;10) instead of a date. At that level a real business could plausibly pay the return.</p>
+
+<h2>7. Where the family stands</h2>
+<div class="eq">
+  <div><b>Joining month:</b> &nbsp; <var>J</var> = <var>a</var> if the scheme's age is known; otherwise <var>J</var> = min { <var>t</var> : <var>E<sub>t</sub></var> &ge; <var>E<sub>C</sub></var> / 2 } &nbsp;(where the typical rupee enters) <span class="n">(10)</span></div>
+  <div><b>Months left:</b> &nbsp; <var>C</var> &minus; <var>J</var> &nbsp;&rarr; Line 1 date = today + (<var>C</var> &minus; <var>J</var>) months <span class="n">(11)</span></div>
+  <div><b>Cash received:</b> &nbsp; <var>R</var> = &Sigma; <var>A</var> &middot; <var>p</var> over months <var>J</var>+<var>e</var>, <var>J</var>+2<var>e</var>, &hellip; strictly before <var>C</var> &nbsp; [lump sum: <var>R</var> = <var>A</var>(1+<var>r</var>) if <var>J</var>+<var>e</var> &lt; <var>C</var>, else 0] <span class="n">(12)</span></div>
+  <div><b>Loss:</b> &nbsp; <var>L</var> = max(0, <var>A</var> &minus; <var>R</var>) &nbsp;&rarr; Line 2 <span class="n">(13)</span></div>
+  <div><b>Bank profit:</b> &nbsp; <var>&Pi;</var> = <var>A</var> &middot; <var>b</var> &middot; (<var>C</var> &minus; <var>J</var>) / 12 &nbsp;(simple profit, before tax) &nbsp;&rarr; Line 3 <span class="n">(14)</span></div>
+</div>
+<p>The family is assumed to take every payout as cash. If the known age <var>a</var> &ge; <var>C</var>, the verdict is <b>overdue</b>.</p>
+
+<h2>8. Scheme-wide figures</h2>
+<div class="eq">
+  <div><b>Money lost:</b> &nbsp; &Sigma;<sub>i</sub> max(0, put in<sub>i</sub> &minus; paid<sub>i</sub>) / &Sigma;<sub>i</sub> put in<sub>i</sub> <span class="n">(15)</span></div>
+  <div><b>Money behind:</b> &nbsp; &Sigma;<sub>i</sub> put in<sub>i</sub> [paid<sub>i</sub> &lt; put in<sub>i</sub>] / &Sigma;<sub>i</sub> put in<sub>i</sub> &nbsp; (share of money whose owners end up with less than they put in) <span class="n">(16)</span></div>
+</div>
+<p>The calculator shows "money behind" as "X out of every 10 people". This treats each rupee as one person, which is exact only if all deposits are the same size.</p>
+
+<h2>8a. Scheme types</h2>
+<p>Recruitment differs by kind of scheme. An app spreads faster than a neighbourhood committee, and doubling schemes keep going because members re-invest. The user picks a type first; it fills a typical promise and replaces the defaults in &sect;3.2 with that type's settings. Only "money doubling" is anchored to a real case (Double Shah: doubling in about 70 days, ran about two years). The others are placeholder judgements until calibrated.</p>
+<table class="numt">
+  <tr><th>Type</th><th>Typical promise (preset)</th><th><var>g</var></th><th><var>M</var></th><th><var>k</var></th><th><var>q</var></th><th>Preset lasts (months)</th></tr>
+  {{typeRows}}
+</table>
+
+<h2>8b. Already invested</h2>
+<p>For a family already in a scheme, "now" is the scheme's age <var>a</var> if known, otherwise the typical joiner's month plus the months since they invested:</p>
+<div class="eq">
+  <div><var>N</var> = <var>a</var> if known, else <var>J</var><sub>typ</sub> + <var>m</var><sub>a</sub>; &nbsp; joined at <var>J</var> = max(0, <var>N</var> &minus; <var>m</var><sub>a</sub>) <span class="n">(17)</span></div>
+  <div><b>Received so far:</b> &nbsp; <var>R</var><sub>u</sub> if the family entered it, else &Sigma; <var>A</var>&middot;<var>p</var> over payout months in (<var>J</var>, <var>N</var>] before <var>C</var> <span class="n">(18)</span></div>
+  <div><b>At risk:</b> &nbsp; max(0, <var>A</var> &minus; received so far); &nbsp; <b>months left:</b> <var>C</var> &minus; <var>N</var> (overdue if <var>N</var> &ge; <var>C</var>) <span class="n">(19)</span></div>
+  <div><b>Bank, looking back:</b> &nbsp; <var>&Pi;</var> = <var>A</var> &middot; <var>b</var> &middot; <var>m</var><sub>a</sub> / 12 &middot; (1 &minus; <var>&tau;</var>) <span class="n">(20)</span></div>
+</div>
+
+<h2>8c. Promise in rupees, warning signs, read-aloud</h2>
+<div class="eq">
+  <div><b>Rupees per period:</b> &nbsp; <var>r</var> = <var>P</var><sub>Rs</sub> / <var>A</var> &nbsp;&nbsp; <b>Lump sum, total back:</b> &nbsp; <var>r</var> = <var>P</var><sub>Rs</sub> / <var>A</var> &minus; 1 (must be &gt; 0) <span class="n">(4a)</span></div>
+</div>
+<p>The warning-sign check asks six yes/no questions (guaranteed profit, bonus for recruiting, no SECP or State Bank licence shown, business not explained, pressure to decide fast, delays on withdrawal). 0 yes: no big signs, still check SECP. 1&ndash;2: warning. 3 or more: high risk. It does not change the model; it gives a second, number-free check, which matters most when the model gives the SECP verdict. A "Listen" button reads the result lines aloud with the phone's own text-to-speech voice (Urdu needs an Urdu voice installed). A chart shows the scheme's cash pool <var>P<sub>t</sub></var> from start to collapse, with "today" marked.</p>
+
+<h2>9. Verdict rules</h2>
+<table>
+  <tr><th>Condition</th><th>Verdict</th><th>What is shown</th></tr>
+  <tr><td><var>r</var><sub>m</sub> &le; <var>&sigma;</var> &middot; <var>b</var><sub>ref</sub>/12</td><td>check-secp</td><td>No date. The user is told to check SECP permission; line 3 is still shown</td></tr>
+  <tr><td>No collapse within <var>H</var> months</td><td>check-secp</td><td>Same as above</td></tr>
+  <tr><td>Known age <var>a</var> &ge; <var>C</var></td><td>overdue</td><td>"By the numbers it should already have run out. Do not put in new money."</td></tr>
+  <tr><td>Otherwise</td><td>collapse</td><td>The three lines</td></tr>
+</table>
+
+<h2>10. Output lines (Urdu)</h2>
+<div class="box">
+  <span class="urdu">اس اسکیم کے پیسے زیادہ سے زیادہ {مہینہ سال} تک ختم ہو جائیں گے۔</span>
+  <span class="gloss">Line 1: "This scheme's money will run out by {month year} at the latest." Followed by: "Most such schemes shut down before that."</span>
+  <span class="urdu">اگر آپ {رقم} لگائیں تو تقریباً {نقصان} ڈوب جائیں گے۔</span>
+  <span class="gloss">Line 2: "If you put in {amount}, about {loss} will be lost." If <var>L</var> = 0: "You may get your money back, but that profit will come from other people's lost money." Then: "X out of every 10 people in this scheme will lose. Late joiners lose almost everything."</span>
+  <span class="urdu">یہی {رقم} {بینک} کے {اکاؤنٹ} میں {مہینے} مہینے رکھیں تو تقریباً {منافع} منافع ملے گا، اور اصل رقم بھی محفوظ رہے گی۔</span>
+  <span class="gloss">Line 3: "Keep the same {amount} in {bank}'s {account} for {months} months and you'd earn about {profit}, and your original money stays safe."</span>
+  <span class="urdu">یہ اسکیم پرانے ممبروں کو نئے ممبروں کے پیسوں سے منافع دیتی ہے۔ جب نئے لوگ آنا کم ہو جائیں گے تو پیسے ختم ہو جائیں گے۔</span>
+  <span class="gloss">"Why?" tap: "This scheme pays old members with new members' money. When fewer new people join, the money will run out."</span>
+</div>
+<p class="small">The calculator has an اردو / English switch; the English lines carry the same numbers (amounts written as Rs 1,50,000). Amounts are rounded and written in lakh/hazaar form (e.g. <span class="ur">1 لاکھ 50 ہزار</span>). Months are written in Urdu (<span class="ur">جنوری … دسمبر</span>) with Western digits for the year.</p>
+
+<h2>11. Worked example: 10% a month, Rs 1 lakh</h2>
+<p>Defaults <var>g</var> = {{g}}, <var>M</var> = {{M}}, <var>k</var> = {{k}}, <var>q</var> = {{q}}. Values are in seed units. The amber row is the first month new cash (after the operators' cut) no longer covers dues. The red row is the collapse.</p>
+<table class="numt">
+  <tr><th>Month <var>t</var></th><th>New money <var>D<sub>t</sub></var></th><th>Raised <var>E<sub>t</sub></var></th><th>Into pool (1&minus;<var>k</var>)<var>D<sub>t</sub></var></th><th>Due <var>O<sub>t</sub></var></th><th>Pool before paying <var>P&prime;<sub>t</sub></var></th><th>Pool after <var>P<sub>t</sub></var></th></tr>
+  {{ledgerRows}}
+</table>
+<ul>
+  <li>Tipping point from (9): <var>E</var>*/<var>M</var> = 1 &minus; 0.10 / (0.9 &times; {{g}}) = <b>{{tip10}}</b> of the market. New cash first falls short of dues in month {{tipMonth}}. The pool built up earlier carries the scheme until month <b>{{C}}</b>.</li>
+  <li>Total raised by collapse: {{raised}} seed units. Paid out in cash: {{paidOut}}. Kept by operators (cut + pool at collapse): {{opKeep}}.</li>
+  <li>Typical joiner (<var>J</var> = month {{J}}): {{left}} months left. Receives Rs {{received}} on Rs 1,00,000, so loses <b>Rs {{loss}}</b>. A bank at 10% would pay Rs {{bankProfit}} over the same months, and the principal stays safe.</li>
+  <li>Scheme-wide: {{lossShare}} of all money put in never comes back, and {{behindShare}} of the money belongs to people who end up behind.</li>
+</ul>
+
+<h2>12. Results across scheme types</h2>
+<p>Defaults as above, Rs 1,00,000, bank 10% per year, typical joiner.</p>
+<table class="numt">
+  <tr><th>Scheme</th><th>Lasts (months)</th><th>Joins month</th><th>Months left</th><th>Gets back (Rs)</th><th>Loses (Rs)</th><th>Bank profit (Rs)</th><th>Money lost / behind</th></tr>
+  {{caseRows}}
+</table>
+<h3>Sensitivity: collapse month at 10% a month</h3>
+<table class="numt" style="width:70%">{{sens}}</table>
+<p>The date depends heavily on <var>g</var> and <var>M</var>. That is why calibration (&sect;14) comes before any public release, and why line 1 says "at the latest" and adds that most schemes shut earlier.</p>
+
+<h3>Calibration probe: "double in 70 days" (Double Shah style)</h3>
+<table class="numt" style="width:85%">
+  <tr><th rowspan="2"><var>g</var></th><th colspan="2"><var>q</var> = 0</th><th colspan="2"><var>q</var> = 0.5</th><th colspan="2"><var>q</var> = 0.8</th></tr>
+  <tr><th><var>M</var>=1,000</th><th><var>M</var>=1,00,000</th><th><var>M</var>=1,000</th><th><var>M</var>=1,00,000</th><th><var>M</var>=1,000</th><th><var>M</var>=1,00,000</th></tr>
+  {{probe}}
+</table>
+<p>With the default <var>g</var> = 0.30 and no reinvestment, a doubling scheme collapses within 3 months. The real Double Shah scheme ran for roughly two years. The model reaches that only with faster recruitment, a larger market, or heavy reinvestment. So <var>g</var>, and probably <var>q</var>, should be set per type of scheme rather than globally.</p>
+
+<h2>13. Bank comparison data</h2>
+<p>Profit rates in % per year, before tax, for individuals with balances up to Rs 10 million. The data was checked on {{checked}}. The SBP policy rate is {{policy}}%. Under SBP's 2026 minimum-profit rule for small savers, conventional banks show 10% on savings. Islamic rates are declared monthly pool returns and change every month.</p>
+<table>
+  <tr><th>Bank / institution</th><th>Savings (conventional)</th><th>Islamic savings</th><th>Fixed deposit / certificate, 1 year</th></tr>
+  {{bankRows}}
+</table>
+<ul class="small">
+  <li>Line 3 applies the chosen annual rate as simple profit over the months left. A 1-year fixed deposit rate is pro-rated even when fewer than 12 months are left. This is an approximation, since early withdrawal may pay less.</li>
+  <li>Withholding tax on profit (section 151) is applied as the user chooses: bank deposits {{taxBank}}, National Savings {{taxNs}} (filer / non-filer). Sources disagree (some give 15% / 30% for banks), so verify against the current Finance Act before release.</li>
+  <li>National Savings Behbood certificates (12.72%) are available only to senior citizens, widows and persons with disabilities, so they are not used as a default.</li>
+</ul>
+<p class="small"><b>Sources:</b></p><ul class="small">{{sources}}</ul>
+
+<h2>14. Limitations and calibration plan</h2>
+<ol>
+  <li><b>Not calibrated.</b> <var>g</var>, <var>M</var>, <var>k</var>, <var>q</var> are placeholders. The plan is to fit them to 3&ndash;5 collapsed schemes with a known promise and lifespan (Double Shah, the Modaraba scam, Pakistani crypto-app collapses) and to report the fit.</li>
+  <li><b>"At the latest" is conditional.</b> Operators often run before the money runs out, which makes the real date earlier. Reinvestment (<var>q</var> &gt; 0) makes the model date later. A date computed with <var>q</var> = 0 is therefore not a guaranteed upper bound.</li>
+  <li><b>No withdrawals or bank runs.</b> Members pulling out principal, or a panic, would bring collapse earlier.</li>
+  <li><b>No real income.</b> The model treats every payout as coming from new deposits. That is why returns near the bank rate get no date.</li>
+  <li><b>Typical joiner.</b> Joining at the half-money point is a default for users who don't know the scheme's age. Late joiners lose much more than this figure.</li>
+  <li><b>Monthly steps.</b> Daily and weekly payouts are summed by month. Lump-sum periods are rounded up to whole months.</li>
+  <li><b>Bank rates go stale.</b> Rates are embedded in the offline file and must be refreshed and rebuilt periodically. The file shows the date the rates were checked.</li>
+</ol>
+
+<h2>15. References</h2>
+<ul>
+  <li>Artzrouni, M. (2009). The mathematics of Ponzi schemes. <i>Mathematical Social Sciences</i>, 58(2), 190&ndash;201.</li>
+  <li>State Bank of Pakistan, monetary policy statements, 2026. Policy rate {{policy}}% (held 14 September 2026).</li>
+  <li>Securities and Exchange Commission of Pakistan (SECP), secp.gov.pk: checking whether a company may take deposits from the public.</li>
+</ul>
+
+<div class="foot">Generated from <code>formula.js</code> and <code>banks.js</code> by <code>make-pdf.js</code>. Every number in &sect;&sect;11&ndash;12 is computed by the same engine the calculator runs.</div>
+</body>
+</html>
