@@ -31,8 +31,10 @@ function siteScript() {
   if (!fs.existsSync(cfg) || !fs.existsSync(qr)) { console.log('Public link: none'); return 'window.SITE = null;\n'; }
   var site = JSON.parse(fs.readFileSync(cfg, 'utf8'));
   console.log('Public link: ' + site.url);
+  console.log('Response log: ' + (site.log || 'not connected'));
   return 'window.SITE = ' + JSON.stringify({
-    url: site.url, repo: site.repo || null, qr: 'data:image/svg+xml;base64,' + fs.readFileSync(qr).toString('base64')
+    url: site.url, repo: site.repo || null, log: site.log || null,
+    qr: 'data:image/svg+xml;base64,' + fs.readFileSync(qr).toString('base64')
   }) + ';\n';
 }
 

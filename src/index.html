@@ -79,6 +79,9 @@
   .wrap[lang="ur"] .unit { font-family: var(--font-ur); font-size: 20px; line-height: 2; }
   .words { min-height: 1.6em; color: var(--accent); font-size: 0.84em; margin-top: 2px; }
   .words:empty { min-height: 0; }
+  .opt { display: inline-block; font-size: 0.6em; line-height: 1.8; font-weight: 400; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 0 8px; margin-inline-start: 6px; vertical-align: middle; white-space: nowrap; }
+  #schemeName { direction: inherit; text-align: start; unicode-bidi: plaintext; font-family: inherit; font-size: 20px; line-height: 1.8; }
+  .count-note { margin-top: 6px; text-align: center; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
   .chips.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -270,6 +273,18 @@
     </div>
 
     <div class="card">
+      <div class="q"><span data-t="qSource"></span><span class="opt" data-t="optional"></span></div>
+      <div class="chips" id="sourceChips" role="group">
+        <button type="button" class="chip" data-v="whatsapp" data-t="srcWhatsapp"></button>
+        <button type="button" class="chip" data-v="person" data-t="srcPerson"></button>
+        <button type="button" class="chip" data-v="social" data-t="srcSocial"></button>
+        <button type="button" class="chip" data-v="other" data-t="srcOther"></button>
+      </div>
+      <label class="q" for="schemeName" style="margin-top:10px"><span data-t="qName"></span><span class="opt" data-t="optional"></span></label>
+      <div class="field"><input type="text" id="schemeName" maxlength="60" autocomplete="off" dir="auto"></div>
+    </div>
+
+    <div class="card">
       <label class="q" for="amount"><span class="n">2</span><span id="amountLabel"></span></label>
       <div class="field">
         <input type="text" id="amount" inputmode="numeric" autocomplete="off" placeholder="100000">
@@ -339,6 +354,7 @@
     </div>
 
     <button type="submit" class="go" data-t="calc"></button>
+    <p class="hint count-note hidden" id="countNote" data-t="countNote"></p>
     <p class="err" id="err" role="alert"></p>
   </form>
 
@@ -453,7 +469,7 @@
   var SELF_HTML = '<!doctype html>\n' + document.documentElement.outerHTML;
 
   var Model = window.ScamModel, BANKS = window.BANKS, LOGOS = window.BANK_LOGOS || {}, SITE = window.SITE || null;
-  var VERSION = { v: '0.3', date: '2026-10-23' };
+  var VERSION = { v: '0.4', date: '2026-10-23' };
   var STORE = 'schemeCheck.v1';
   var SVG = 'http://www.w3.org/2000/svg';
   var $ = function (id) { return document.getElementById(id); };
@@ -472,7 +488,7 @@
       trFree: 'مفت', trOffline: 'انٹرنیٹ کے بغیر بھی', trSignup: 'کوئی سائن اپ نہیں', trIndependent: 'کسی کمپنی سے تعلق نہیں',
       trRates: function (d) { return 'شرحیں: ' + d; },
       aboutTitle: 'یہ کیلکولیٹر کیا ہے؟',
-      aboutWhat: 'یہ ایک مفت کیلکولیٹر ہے جو بتاتا ہے کہ زیادہ منافع کا وعدہ کرنے والی اسکیم کب تک چل سکتی ہے، اس میں آپ کا کتنا نقصان ہو سکتا ہے، اور یہی پیسے بینک میں کتنا کماتے۔ یہ کسی بینک، کمپنی یا سرکاری ادارے سے منسلک نہیں۔ آپ کی لکھی ہوئی معلومات آپ کے فون سے باہر نہیں جاتیں، جب تک آپ خود واٹس ایپ پر نہ بھیجیں۔',
+      aboutWhat: 'یہ ایک مفت کیلکولیٹر ہے جو بتاتا ہے کہ زیادہ منافع کا وعدہ کرنے والی اسکیم کب تک چل سکتی ہے، اس میں آپ کا کتنا نقصان ہو سکتا ہے، اور یہی پیسے بینک میں کتنا کماتے۔ یہ کسی بینک، کمپنی یا سرکاری ادارے سے منسلک نہیں۔ حساب لگانے پر یہ صرف بغیر نام کی گنتی رکھتا ہے: اسکیم کی قسم، وعدہ، نتیجہ، اور اگر آپ لکھیں تو اسکیم کا نام اور وہ آپ تک کیسے پہنچی۔ آپ کا نام، فون نمبر یا رقم کبھی نہیں بھیجی جاتی۔',
       aboutHowTitle: 'حساب کیسے لگتا ہے',
       aboutHow: 'ایسی اسکیم پرانے ممبروں کو نئے ممبروں کے پیسوں سے منافع دیتی ہے۔ کیلکولیٹر مہینہ بہ مہینہ حساب لگاتا ہے کہ نئے لوگوں کے پیسے کب وعدہ کیے گئے منافع سے کم پڑ جائیں گے۔ وہی مہینہ اسکیم کے ختم ہونے کا ہے۔',
       aboutPdf: 'پورا طریقہ اور فارمولے (PDF)',
@@ -493,6 +509,10 @@
       version: function (v, d) { return 'ورژن ' + v + ' · ' + d; },
       modeThink: 'پیسے لگانے کا سوچ رہا ہوں', modeAlready: 'پیسے لگا چکا ہوں',
       qType: 'یہ کس قسم کی اسکیم ہے؟', typeHint: 'چننے سے عام وعدے کے نمبر بھر جائیں گے، آپ انہیں بدل سکتے ہیں۔',
+      qSource: 'یہ اسکیم آپ تک کیسے پہنچی؟', optional: 'اختیاری',
+      srcWhatsapp: 'واٹس ایپ پر فارورڈ', srcPerson: 'کسی جاننے والے سے', srcSocial: 'سوشل میڈیا', srcOther: 'کوئی اور',
+      qName: 'اسکیم کا نام', namePh: 'مثلاً ڈبل منافع پلان',
+      countNote: 'حساب لگانے پر ہم بغیر نام کے گنتی رکھتے ہیں۔ آپ کا نام، نمبر یا رقم کبھی نہیں بھیجی جاتی۔',
       tyDouble: 'پیسے ڈبل', tyDoubleSub: 'مثلاً 70 دن میں ڈبل',
       tyCommittee: 'کمیٹی ڈبل', tyCommitteeSub: 'مثلاً 6 مہینے میں ڈبل',
       tyCrypto: 'کرپٹو / ایپ', tyCryptoSub: 'مثلاً روزانہ 2%',
@@ -629,7 +649,7 @@
       trFree: 'Free', trOffline: 'Works offline too', trSignup: 'No sign-up', trIndependent: 'Not linked to any company',
       trRates: function (d) { return 'Rates: ' + d; },
       aboutTitle: 'About this calculator',
-      aboutWhat: 'A free calculator that shows how long a high-profit scheme can last, how much you could lose, and what the same money would earn in a bank. It is not linked to any bank, company or government office. What you type stays on your phone unless you choose to share it on WhatsApp.',
+      aboutWhat: 'A free calculator that shows how long a high-profit scheme can last, how much you could lose, and what the same money would earn in a bank. It is not linked to any bank, company or government office. When you press Calculate, it counts the check anonymously: the kind of scheme, the promise, the result, and the scheme\'s name and how it reached you if you entered them. Your name, phone number and amount are never sent.',
       aboutHowTitle: 'How the maths works',
       aboutHow: 'A scheme like this pays old members with new members\' money. Month by month, the calculator works out when new money will fall short of the promised profits. That month is when the scheme runs out.',
       aboutPdf: 'Full method and formulas (PDF)',
@@ -650,6 +670,10 @@
       version: function (v, d) { return 'Version ' + v + ' · ' + d; },
       modeThink: 'Thinking of investing', modeAlready: 'Already invested',
       qType: 'What kind of scheme is it?', typeHint: 'Picking one fills in a typical promise. You can change the numbers.',
+      qSource: 'How did this scheme reach you?', optional: 'optional',
+      srcWhatsapp: 'Forwarded on WhatsApp', srcPerson: 'From someone I know', srcSocial: 'Social media', srcOther: 'Other',
+      qName: 'Scheme name', namePh: 'e.g. Double Profit Plan',
+      countNote: 'Each check is counted anonymously. Your name, number and amount are never sent.',
       tyDouble: 'Money doubling', tyDoubleSub: 'e.g. doubles in 70 days',
       tyCommittee: 'Committee doubling', tyCommitteeSub: 'e.g. doubles in 6 months',
       tyCrypto: 'Crypto or app', tyCryptoSub: 'e.g. 2% a day',
@@ -768,7 +792,7 @@
     }
   };
 
-  var state = { lang: 'ur', mode: 'think', scheme: 'other', freq: 'monthly', unit: 'days', rateUnit: 'pct', bank: null, type: 'savings', tax: 'nonfiler', flags: {} };
+  var state = { lang: 'ur', mode: 'think', scheme: 'other', source: '', freq: 'monthly', unit: 'days', rateUnit: 'pct', bank: null, type: 'savings', tax: 'nonfiler', flags: {} };
   var last = null; // { r, input, params, example, got }
   function L() { return T[state.lang]; }
 
@@ -796,11 +820,11 @@
   function load() { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { return {}; } }
   function bankById(id) { for (var i = 0; i < BANKS.list.length; i++) if (BANKS.list[i].id === id) return BANKS.list[i]; return null; }
   function bankName(bk) { return state.lang === 'ur' ? bk.ur : bk.en; }
-  var INPUTS = ['amount', 'rate', 'period', 'age', 'ago', 'got'];
+  var INPUTS = ['amount', 'rate', 'period', 'age', 'ago', 'got', 'schemeName'];
 
   function save() {
     var data = {
-      lang: state.lang, mode: state.mode, scheme: state.scheme, freq: state.freq, unit: state.unit, rateUnit: state.rateUnit,
+      lang: state.lang, mode: state.mode, scheme: state.scheme, source: state.source, freq: state.freq, unit: state.unit, rateUnit: state.rateUnit,
       bank: state.bank, type: state.type, tax: state.tax, adv: readAdv()
     };
     var old = load();
@@ -834,6 +858,8 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) {
       el.textContent = L()[el.getAttribute('data-t')];
     });
+    $('schemeName').placeholder = L().namePh;
+    pressed('sourceChips', state.source);
     Array.prototype.forEach.call(document.querySelectorAll('.lang [data-lang]'), function (btn) {
       btn.setAttribute('aria-pressed', btn.getAttribute('data-lang') === lang ? 'true' : 'false');
     });
@@ -872,6 +898,13 @@
     setRateFromFraction(pre.rate);
   }
   onChip('typeTiles', function (type) { setScheme(type, true); showRateWords(); save(); });
+
+  // Optional: how the scheme reached them (tap again to clear).
+  onChip('sourceChips', function (v) {
+    state.source = state.source === v ? '' : v;
+    pressed('sourceChips', state.source);
+    save();
+  });
 
   // ---------- inputs ----------
   function showAmountWords() {
@@ -1089,6 +1122,7 @@
     render();
     if (opts.scroll) $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (!opts.example) save();
+    if (!opts.example && !opts.quiet) logCheck();
   }
 
   function render() {
@@ -1281,9 +1315,67 @@
     }
   });
 
+  // ---------- anonymous response log ----------
+  // Each check adds one row to the owner's Google Sheet (tools/scheme-log.gs): the kind of scheme,
+  // the promise, the result, and the optional name and source. Never a name, number or amount.
+  // A random device id lets the Sheet count people without knowing who they are.
+  var QUEUE = 'schemeCheck.queue', SEEN = 'schemeCheck.seen', DEVICE = 'schemeCheck.device';
+  function storeGet(k, fallback) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } }
+  function storeSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage blocked: fine */ } }
+  function where() {
+    if (location.protocol === 'file:' || location.protocol === 'content:') return 'file';
+    return /\.github\.io$/.test(location.hostname) ? 'web' : 'other';
+  }
+  // Not from the claude.ai preview (its frame blocks it) or a local test server, unless ?logtest is in the address.
+  var CAN_LOG = !!(SITE && SITE.log) && !document.querySelector('meta[name="claude:viewport-fit-sides"]') &&
+    (where() !== 'other' || /[?&]logtest\b/.test(location.search));
+  function deviceId() {
+    var id = storeGet(DEVICE, null);
+    if (!id) { id = Math.random().toString(36).slice(2, 12) + Date.now().toString(36); storeSet(DEVICE, id); }
+    return id;
+  }
+  function sendRow(row) {
+    return fetch(SITE.log, {
+      method: 'POST', mode: 'no-cors', keepalive: true,
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(row)
+    });
+  }
+  // Offline (e.g. the file opened without internet): keep rows and send them next time.
+  function queueRow(row) { var q = storeGet(QUEUE, []); q.push(row); storeSet(QUEUE, q.slice(-50)); }
+  function flushQueue() {
+    if (!CAN_LOG || !navigator.onLine) return;
+    var q = storeGet(QUEUE, []);
+    if (!q.length) return;
+    storeSet(QUEUE, []);
+    q.forEach(function (row) { sendRow(row).catch(function () { queueRow(row); }); });
+  }
+  window.addEventListener('online', flushQueue);
+
+  function logCheck() {
+    if (!CAN_LOG || !last || last.example) return;
+    var r = last.r, monthly = Model.monthlyRate(r.schedule), name = $('schemeName').value.replace(/\s+/g, ' ').trim().slice(0, 60);
+    // The same scheme counts once a day per device, however often Calculate is pressed.
+    var key = [state.mode, state.scheme, state.freq, Math.round(monthly * 10000), name.toLowerCase()].join('|');
+    var today = new Date().toISOString().slice(0, 10), seen = storeGet(SEEN, {});
+    if (seen[key] === today) return;
+    seen[key] = today;
+    var keys = Object.keys(seen);
+    keys.slice(0, Math.max(0, keys.length - 100)).forEach(function (k) { delete seen[k]; });
+    storeSet(SEEN, seen);
+    var left = r.invested ? r.invested.monthsLeft : r.family ? r.family.monthsLeft : '';
+    var row = {
+      device: deviceId(), where: where(), lang: state.lang, mode: state.mode, type: state.scheme, source: state.source,
+      name: name, freq: state.freq, rate: Math.round(monthly * 10000) / 100, verdict: r.verdict,
+      months: r.verdict === 'check-secp' ? '' : left, warning: r.verdict !== 'check-secp', version: VERSION.v
+    };
+    if (!navigator.onLine) { queueRow(row); return; }
+    sendRow(row).catch(function () { queueRow(row); });
+  }
+
   // ---------- start ----------
   var saved = load();
   INPUTS.forEach(function (id) { if (saved[id]) $(id).value = saved[id]; });
+  state.source = ['whatsapp', 'person', 'social', 'other'].indexOf(saved.source) >= 0 ? saved.source : '';
   state.mode = saved.mode === 'already' ? 'already' : 'think';
   state.scheme = Model.TYPES[saved.scheme] ? saved.scheme : 'other';
   state.freq = saved.freq || 'monthly';
@@ -1300,6 +1392,10 @@
 
   // Hosted on the web, the page's link is what people share; saving a file is blocked there.
   if (document.querySelector('meta[name="claude:viewport-fit-sides"]')) $('shareCard').classList.add('hidden');
+
+  // Say that checks are counted only where they really are, and send anything saved while offline.
+  $('countNote').classList.toggle('hidden', !CAN_LOG);
+  flushQueue();
 
   // About section links: the method PDF on the public site and the open code.
   if (SITE && SITE.url) { $('pdfLink').href = SITE.url + 'Collapse-Model-Formula.pdf'; $('pdfLine').classList.remove('hidden'); }

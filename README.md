@@ -70,3 +70,17 @@ If the address ever changes, run `py tools/make-qr.py <new address>` and rebuild
 ## Design (v0.3)
 
 Navy and gold, always light: a navy header band with a faint gold eight-point star pattern and a shield logo, a trust strip (free, works offline, no sign-up, not linked to any company, rates date), white cards with a soft shadow, an About and sources section (what it is, how the maths works with a link to the PDF, where the numbers come from, limits, open code) and a navy footer band. Colours are the tokens at the top of the `<style>` block in `src/index.html`.
+
+## Response log (Google Sheet)
+
+Each check on the public website (and on offline copies, once they're back online) adds one anonymous row to a Google Sheet: device id (random, not linked to a person), where it ran, language, mode, scheme type, how the scheme reached them and its name (both optional), payout frequency, promise per month, result, months left, whether a warning was shown, and app version. Never a name, phone number or amount. The same scheme counts once per device per day.
+
+`tools/scheme-log.gs` is the Google Apps Script that receives the rows and builds three tabs:
+
+- **Checks**: one row per check.
+- **Reach**: young savers you reach yourself (First Account sessions, cards in WhatsApp groups) — fill in by hand.
+- **Summary**: the totals and a ready line: "Checked X forwarded schemes; alerted X+ young savers".
+
+Set-up, once: in a new Google Sheet open Extensions → Apps Script, replace the code with `tools/scheme-log.gs`, save, run `setup`, then Deploy → New deployment → Web app (Execute as: Me, Who has access: Anyone). Put the `/exec` address in `site.json` as `"log"`, run `node build.js`, commit and push. Until then the site counts nothing.
+
+To test locally without touching the Sheet: set `"log": "http://localhost:4173/__log"`, build, run `node serve.js` and open `http://localhost:4173/scheme-check.html?logtest`.
