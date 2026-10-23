@@ -47,13 +47,15 @@ function setup() {
 
   var sum = ss.getSheetByName(SUMMARY) || ss.insertSheet(SUMMARY, 0);
   sum.clear();
+  // ROWS(UNIQUE(FILTER(...))) so an empty tab counts 0: FILTER returns an error when nothing
+  // matches, and COUNTUNIQUE would count that error as one value.
   var rows = [
     ['Your numbers', ''],
     ['Schemes checked on the site (all)', '=COUNTA(Checks!A2:A)'],
     ['Forwarded schemes checked (came on WhatsApp)', '=COUNTIF(Checks!G2:G,"whatsapp")'],
-    ['Different schemes named', '=IFERROR(COUNTUNIQUE(FILTER(LOWER(TRIM(Checks!H2:H)),Checks!H2:H<>"")),0)'],
-    ['People who used the site (devices)', '=IFERROR(COUNTUNIQUE(FILTER(Checks!B2:B,Checks!B2:B<>"")),0)'],
-    ['People alerted on the site (saw a warning)', '=IFERROR(COUNTUNIQUE(FILTER(Checks!B2:B,Checks!M2:M="yes")),0)'],
+    ['Different schemes named', '=IFERROR(ROWS(UNIQUE(FILTER(LOWER(TRIM(Checks!H2:H)),Checks!H2:H<>""))),0)'],
+    ['People who used the site (devices)', '=IFERROR(ROWS(UNIQUE(FILTER(Checks!B2:B,Checks!B2:B<>""))),0)'],
+    ['People alerted on the site (saw a warning)', '=IFERROR(ROWS(UNIQUE(FILTER(Checks!B2:B,Checks!M2:M="yes"))),0)'],
     ['Young savers reached at sessions and through cards (Reach tab)', '=SUM(Reach!D2:D)'],
     ['Alerted in total (site + sessions and cards)', '=B6+B7'],
     ['', ''],
