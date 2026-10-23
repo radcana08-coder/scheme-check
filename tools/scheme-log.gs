@@ -1,4 +1,6 @@
 /**
+ * @OnlyCurrentDoc  (the script can open only this Sheet, not your other files)
+ *
  * Scheme Check response log (Google Apps Script, bound to your tracking Google Sheet).
  *
  * Every check on the website adds one anonymous row to the "Checks" tab. No name,
