@@ -2,7 +2,7 @@
 
 An offline Urdu calculator. It tells a family when a high-return scheme is likely to run out of money, how much they would lose, and what the same money would earn in a bank.
 
-**Status: demo v0.2.** The model parameters are placeholders and have not been calibrated against real collapsed schemes. Don't present the results as findings yet.
+**Status: demo v0.3.** The model parameters are placeholders and have not been calibrated against real collapsed schemes. Don't present the results as findings yet.
 
 **Live:** https://radcana08-coder.github.io/scheme-check/ (formula PDF: https://radcana08-coder.github.io/scheme-check/Collapse-Model-Formula.pdf)
 
@@ -66,3 +66,7 @@ If the address ever changes, run `py tools/make-qr.py <new address>` and rebuild
 - Listen button (phone's text-to-speech; Urdu needs an Urdu voice installed).
 - Warning-sign checklist (6 yes/no questions → none / warning / high risk).
 - Tax switch on the bank line: non-filer, filer, before tax (`tax` in `banks.js`, to be verified).
+
+## Design (v0.3)
+
+Navy and gold, always light: a navy header band with a faint gold eight-point star pattern and a shield logo, a trust strip (free, works offline, no sign-up, not linked to any company, rates date), white cards with a soft shadow, an About and sources section (what it is, how the maths works with a link to the PDF, where the numbers come from, limits, open code) and a navy footer band. Colours are the tokens at the top of the `<style>` block in `src/index.html`.

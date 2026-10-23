@@ -3,16 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0e6b52">
+<meta name="theme-color" content="#0b2545">
 <title>اسکیم چیک | Scheme Check</title>
 <!-- fonts -->
 <style>
-  /* Layout: one narrow column of numbered question cards; results stack below, then the bank question and red flags. Always light. */
+  /* Layout: a navy header band with a gold star pattern, then one narrow column of numbered question cards;
+     results, the bank question, warning signs and an about section below; a navy footer band. Always light. */
   :root {
-    --bg: #f6f3ee; --card: #ffffff; --ink: #1d232b; --muted: #5c646d; --line: #e3ddd2;
-    --accent: #0e6b52; --accent-ink: #ffffff; --accent-soft: #e3f2ec;
-    --bad: #b42318; --bad-bg: #fdecea; --warn: #8a5a00; --warn-bg: #fff3d6; --good: #0e6b52; --good-bg: #e5f3ee;
-    --chip: #f1ede6; --focus: #f0a400; --wa: #1a7f45; --wa-ink: #ffffff; --tank: #cfe7dd;
+    --bg: #f2f5fa; --card: #ffffff; --ink: #14213d; --muted: #5b6475; --line: #dce3ee;
+    --navy: #0b2545; --navy-2: #13315c; --gold: #d4a72c; --gold-ink: #8a6a12; --on-navy: #c9d4e6; --on-navy-gold: #f3e3b3;
+    --accent: #0b2545; --accent-ink: #ffffff; --accent-soft: #e7eef9; --sel: #1d4e89;
+    --bad: #b42318; --bad-bg: #fdecea; --warn: #9a5b00; --warn-bg: #fff4db; --good: #0b7a55; --good-bg: #e7f5ee;
+    --chip: #f5f7fb; --focus: #1d4e89; --wa: #1a7f45; --wa-ink: #ffffff; --tank: #dce6f5;
+    --shadow: 0 1px 2px rgba(11, 37, 69, 0.06), 0 6px 18px rgba(11, 37, 69, 0.06);
     --font-ur: 'Gulzar', 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', 'Noto Naskh Arabic', serif;
     --font-en: 'Atkinson Hyperlegible', 'Segoe UI', Roboto, system-ui, sans-serif;
     color-scheme: light;
@@ -21,28 +24,47 @@
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-en); }
 
-  .wrap { max-width: 552px; margin: 0 auto; padding-block: 12px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-  .wrap[lang="ur"] { font-family: var(--font-ur); font-size: 21px; line-height: 2.3; font-synthesis: none; --lh-ctl: 2.1; --title: 36px; }
-  .wrap[lang="en"] { font-family: var(--font-en); font-size: 18px; line-height: 1.55; --lh-ctl: 1.35; --title: 28px; }
+  .wrap[lang="ur"] { font-family: var(--font-ur); font-size: 21px; line-height: 2.3; font-synthesis: none; --lh-ctl: 2.1; --title: 38px; }
+  .wrap[lang="en"] { font-family: var(--font-en); font-size: 18px; line-height: 1.55; --lh-ctl: 1.35; --title: 30px; }
+  .inner { max-width: 552px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  main.inner { padding-block: 2px 28px; }
 
-  header { display: grid; gap: 2px; padding: 4px 0; }
+  /* Header band: navy with a faint gold eight-point star pattern */
+  .band {
+    background-color: var(--navy); color: #ffffff; border-bottom: 3px solid var(--gold);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Cg fill='none' stroke='%23d4a72c' stroke-opacity='.2' stroke-width='1'%3E%3Crect x='7' y='7' width='14' height='14'/%3E%3Cpath d='M14 3.1 24.9 14 14 24.9 3.1 14z'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .band .inner { padding-block: 14px 16px; display: grid; gap: 4px; }
+  .band button:focus-visible { outline-color: var(--gold); }
   .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  h1 { font-size: var(--title); margin: 0; line-height: 1.6; color: var(--accent); }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .mark { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); display: grid; place-items: center; background: var(--navy-2); flex: none; }
+  .mark svg { width: 28px; height: 28px; fill: none; stroke: var(--gold); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  h1 { font-size: var(--title); margin: 0; line-height: 1.5; color: #ffffff; }
   .wrap[lang="ur"] h1 { font-weight: 400; }
-  .tag { margin: 0; color: var(--muted); font-size: 0.86em; }
+  .slogan { margin: 0; font-size: 1em; color: #ffffff; }
+  .wrap[lang="en"] .slogan { font-weight: 700; }
+  .tag { margin: 0; color: var(--on-navy); font-size: 0.8em; }
+  .trust { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 6px 0 0; padding: 0; list-style: none; }
+  .trust li {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 0.66em; line-height: 1.9; padding: 1px 10px;
+    border: 1px solid rgba(212, 167, 44, 0.55); border-radius: 99px; color: var(--on-navy-gold); background: rgba(255, 255, 255, 0.05);
+  }
+  .wrap[lang="en"] .trust li { line-height: 1.7; }
+  .trust svg { width: 15px; height: 15px; fill: none; stroke: var(--gold); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
-  .lang { display: inline-flex; border: 2px solid var(--accent); border-radius: 99px; overflow: hidden; }
-  .lang button { font-size: 16px; line-height: 1.6; padding: 4px 14px; min-height: 40px; border: 0; background: var(--card); color: var(--accent); cursor: pointer; }
+  .lang { display: inline-flex; border: 1.5px solid var(--gold); border-radius: 99px; overflow: hidden; }
+  .lang button { font-size: 16px; line-height: 1.6; padding: 4px 14px; min-height: 40px; border: 0; background: transparent; color: #ffffff; cursor: pointer; }
   .lang button[lang="ur"] { font-family: var(--font-ur); font-size: 18px; line-height: 1.9; padding-block: 0; }
   .lang button[lang="en"] { font-family: var(--font-en); font-weight: 700; }
-  .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .lang button[aria-pressed="true"] { background: var(--gold); color: var(--navy); }
 
-  .mode { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 2px solid var(--accent); border-radius: 14px; overflow: hidden; margin-top: 10px; }
-  .mode button { font: inherit; font-size: 0.8em; line-height: var(--lh-ctl); padding: 8px 6px; min-height: 52px; border: 0; background: var(--card); color: var(--accent); cursor: pointer; }
-  .mode button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .mode { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; margin-top: 14px; box-shadow: var(--shadow); }
+  .mode button { font: inherit; font-size: 0.8em; line-height: var(--lh-ctl); padding: 8px 6px; min-height: 52px; border: 0; border-radius: 10px; background: transparent; color: var(--navy); cursor: pointer; }
+  .mode button[aria-pressed="true"] { background: var(--navy); color: #ffffff; }
   .wrap[lang="en"] .mode button { font-weight: 700; }
 
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 14px; margin: 12px 0; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 14px; margin: 12px 0; box-shadow: var(--shadow); }
   .q { display: block; font-size: 1.04em; margin: 0 0 4px; }
   .wrap[lang="en"] .q { font-weight: 700; }
   .n { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 700 16px/1 var(--font-en); margin-inline-end: 8px; vertical-align: middle; }
@@ -65,7 +87,7 @@
     border: 2px solid var(--line); border-radius: 10px; background: var(--chip); color: var(--ink); cursor: pointer;
   }
   .chip small { display: block; font-size: 0.72em; color: var(--muted); line-height: 1.5; }
-  .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .chip[aria-pressed="true"] { border-color: var(--sel); background: var(--accent-soft); color: var(--sel); }
   .wrap[lang="en"] .chip[aria-pressed="true"] { font-weight: 700; }
   .chip:disabled { opacity: .35; cursor: not-allowed; }
   .seg { display: inline-flex; gap: 0; margin-top: 6px; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; }
@@ -84,7 +106,7 @@
   .type .ts { font-size: 0.6em; line-height: 1.6; color: var(--muted); }
   .wrap[lang="en"] .type .tn { font-weight: 700; line-height: 1.3; }
   .wrap[lang="en"] .type .ts { line-height: 1.3; }
-  .type[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .type[aria-pressed="true"] { border-color: var(--sel); background: var(--accent-soft); }
 
   details { margin-top: 4px; }
   summary { cursor: pointer; color: var(--accent); font-size: 0.86em; padding: 4px 0; }
@@ -139,9 +161,9 @@
   .why, .note { background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 10px 14px; margin-top: 10px; font-size: 0.9em; }
   .note { font-size: 0.78em; color: var(--muted); }
   .qr { display: grid; place-items: center; margin: 10px 0 6px; }
-  .qr img { width: 180px; height: 180px; background: #ffffff; border-radius: 8px; }
+  .qr img { width: 196px; height: 196px; background: #ffffff; border: 2px solid var(--gold); border-radius: 12px; padding: 6px; }
   .url { margin: 0 0 8px; text-align: center; font: 15px/1.5 var(--font-en); overflow-wrap: anywhere; direction: ltr; }
-  .url a { color: var(--accent); }
+  .url a { color: var(--sel); }
   .copy-note { font-size: 0.74em; color: var(--muted); text-align: center; margin: 6px 0 0; }
   .copy-note:empty { display: none; }
 
@@ -151,7 +173,7 @@
     display: grid; justify-items: center; gap: 4px; padding: 10px 4px 6px; min-height: 104px;
     border: 2px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); cursor: pointer; font: inherit;
   }
-  .bank[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .bank[aria-pressed="true"] { border-color: var(--sel); background: var(--accent-soft); }
   .logo {
     width: 56px; height: 56px; border-radius: 12px; display: grid; place-items: center; overflow: hidden;
     background: var(--chip); color: var(--accent); font: 700 15px/1 var(--font-en); letter-spacing: 0.04em; border: 1px solid var(--line);
@@ -182,7 +204,18 @@
   .adv input[type=text] { font-size: 18px; padding: 6px 10px; }
   .adv .detail { direction: ltr; text-align: left; font: 13px/1.5 Consolas, 'Courier New', monospace; color: var(--muted); white-space: pre-wrap; margin-top: 8px; overflow-wrap: anywhere; }
   .adv .detail:empty { display: none; }
-  footer { color: var(--muted); font-size: 0.7em; margin-top: 18px; display: grid; gap: 2px; }
+  .about h2 { font-size: 1.08em; margin: 0 0 4px; color: var(--navy); font-weight: 400; }
+  .wrap[lang="en"] .about h2 { font-weight: 700; }
+  .about h3 { display: flex; align-items: center; gap: 8px; font-size: 0.86em; margin: 14px 0 2px; color: var(--navy); font-weight: 400; }
+  .wrap[lang="en"] .about h3 { font-weight: 700; }
+  .about h3 svg { width: 22px; height: 22px; fill: none; stroke: var(--gold-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .about p, .about li { font-size: 0.78em; margin: 0; }
+  .about ul { margin: 2px 0 0; padding-inline-start: 1.2em; }
+  .about a { color: var(--sel); }
+  .about .ver { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 0.7em; color: var(--muted); }
+
+  .foot { background: var(--navy); color: var(--on-navy); border-top: 3px solid var(--gold); }
+  .foot .inner { padding-block: 16px 28px; display: grid; gap: 4px; font-size: 0.68em; }
 
   .hidden { display: none !important; }
   bdi { unicode-bidi: isolate; }
@@ -192,20 +225,35 @@
 </head>
 <body>
 <div class="wrap" id="app" dir="rtl" lang="ur">
-  <header>
-    <div class="top">
-      <h1 data-t="title">اسکیم چیک</h1>
-      <div class="lang" role="group" aria-label="Language / زبان">
-        <button type="button" lang="ur" data-lang="ur" aria-pressed="true">اردو</button>
-        <button type="button" lang="en" data-lang="en" aria-pressed="false">English</button>
+  <header class="band">
+    <div class="inner">
+      <div class="top">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.8 19 5.6v5.6c0 4.6-3 8.5-7 9.9-4-1.4-7-5.3-7-9.9V5.6z"/><path d="m8.8 12.1 2.2 2.2 4.3-4.6"/></svg></span>
+          <h1 data-t="title">اسکیم چیک</h1>
+        </div>
+        <div class="lang" role="group" aria-label="Language / زبان">
+          <button type="button" lang="ur" data-lang="ur" aria-pressed="true">اردو</button>
+          <button type="button" lang="en" data-lang="en" aria-pressed="false">English</button>
+        </div>
       </div>
-    </div>
-    <p class="tag" data-t="tagline"></p>
-    <div class="mode" id="modeChips" role="group">
-      <button type="button" data-v="think" data-t="modeThink"></button>
-      <button type="button" data-v="already" data-t="modeAlready"></button>
+      <p class="slogan" data-t="slogan"></p>
+      <p class="tag" data-t="tagline"></p>
+      <ul class="trust">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="9" width="17" height="11.5" rx="1.5"/><path d="M2.5 9h19M12 9v11.5M12 9c-1.6-3.6-6-4-6-1.6S10.2 9 12 9zm0 0c1.6-3.6 6-4 6-1.6S13.8 9 12 9z"/></svg><span data-t="trFree"></span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.6a15 15 0 0 1 4.6-3M22 8.6A15 15 0 0 0 10.6 4.6M5 12a10 10 0 0 1 3.4-2.2M19 12a10 10 0 0 0-2.5-1.7M8.6 15.6a5 5 0 0 1 6-.7"/><circle cx="12" cy="19" r="1"/><path d="M3 3l18 18"/></svg><span data-t="trOffline"></span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0 1 10.6-5M16 16l5 5M21 16l-5 5"/></svg><span data-t="trSignup"></span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 15l-1.5 1.5a3.5 3.5 0 0 1-5-5L4 10M15 9l1.5-1.5a3.5 3.5 0 0 1 5 5L20 14M8 3.5v3M3.5 8h3M16 20.5v-3M20.5 16h-3"/></svg><span data-t="trIndependent"></span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span id="trRates"></span></li>
+      </ul>
     </div>
   </header>
+
+  <main class="inner">
+  <div class="mode" id="modeChips" role="group">
+    <button type="button" data-v="think" data-t="modeThink"></button>
+    <button type="button" data-v="already" data-t="modeAlready"></button>
+  </div>
 
   <form id="form" novalidate>
     <div class="card">
@@ -367,10 +415,30 @@
     <div class="detail" id="detail"></div>
   </details>
 
-  <footer>
-    <div id="ratesDate"></div>
-    <div data-t="disclaimer"></div>
-    <div data-t="logosNote"></div>
+  <section class="card about" id="about">
+    <h2 data-t="aboutTitle"></h2>
+    <p data-t="aboutWhat"></p>
+    <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 7h7M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18h.01M12 18h3.5"/></svg><span data-t="aboutHowTitle"></span></h3>
+    <p data-t="aboutHow"></p>
+    <p class="hidden" id="pdfLine"><a id="pdfLink" target="_blank" rel="noopener" data-t="aboutPdf"></a></p>
+    <h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V5.5A2.5 2.5 0 0 1 6.5 3H20v14H6.5A2.5 2.5 0 0 0 4 19.5zm0 0A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg><span data-t="aboutSourcesTitle"></span></h3>
+    <ul id="sourcesList"></ul>
+    <h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l9.5 17h-19z"/><path d="M12 10v4.5M12 17.5v.5"/></svg><span data-t="aboutLimitsTitle"></span></h3>
+    <p data-t="aboutLimits"></p>
+    <div class="hidden" id="openBlock">
+      <h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg><span data-t="aboutOpenTitle"></span></h3>
+      <p><span data-t="aboutOpen"></span> <a id="repoLink" target="_blank" rel="noopener" dir="ltr"></a></p>
+    </div>
+    <p class="ver" id="version"></p>
+  </section>
+  </main>
+
+  <footer class="foot">
+    <div class="inner">
+      <div id="ratesDate"></div>
+      <div data-t="disclaimer"></div>
+      <div data-t="logosNote"></div>
+    </div>
   </footer>
 </div>
 
@@ -385,6 +453,7 @@
   var SELF_HTML = '<!doctype html>\n' + document.documentElement.outerHTML;
 
   var Model = window.ScamModel, BANKS = window.BANKS, LOGOS = window.BANK_LOGOS || {}, SITE = window.SITE || null;
+  var VERSION = { v: '0.3', date: '2026-10-23' };
   var STORE = 'schemeCheck.v1';
   var SVG = 'http://www.w3.org/2000/svg';
   var $ = function (id) { return document.getElementById(id); };
@@ -398,7 +467,30 @@
   var T = {
     ur: {
       title: 'اسکیم چیک',
-      tagline: 'چند باتیں لکھیں، اور جانیں کہ اس اسکیم میں آپ کے پیسوں کا کیا ہو گا۔ انٹرنیٹ کے بغیر چلتا ہے۔',
+      tagline: 'چند باتیں لکھیں، اور جانیں کہ اس اسکیم میں آپ کے پیسوں کا کیا ہو گا۔',
+      slogan: 'اپنے پیسے دھوکے کی اسکیموں سے بچائیں',
+      trFree: 'مفت', trOffline: 'انٹرنیٹ کے بغیر بھی', trSignup: 'کوئی سائن اپ نہیں', trIndependent: 'کسی کمپنی سے تعلق نہیں',
+      trRates: function (d) { return 'شرحیں: ' + d; },
+      aboutTitle: 'یہ کیلکولیٹر کیا ہے؟',
+      aboutWhat: 'یہ ایک مفت کیلکولیٹر ہے جو بتاتا ہے کہ زیادہ منافع کا وعدہ کرنے والی اسکیم کب تک چل سکتی ہے، اس میں آپ کا کتنا نقصان ہو سکتا ہے، اور یہی پیسے بینک میں کتنا کماتے۔ یہ کسی بینک، کمپنی یا سرکاری ادارے سے منسلک نہیں۔ آپ کی لکھی ہوئی معلومات آپ کے فون سے باہر نہیں جاتیں، جب تک آپ خود واٹس ایپ پر نہ بھیجیں۔',
+      aboutHowTitle: 'حساب کیسے لگتا ہے',
+      aboutHow: 'ایسی اسکیم پرانے ممبروں کو نئے ممبروں کے پیسوں سے منافع دیتی ہے۔ کیلکولیٹر مہینہ بہ مہینہ حساب لگاتا ہے کہ نئے لوگوں کے پیسے کب وعدہ کیے گئے منافع سے کم پڑ جائیں گے۔ وہی مہینہ اسکیم کے ختم ہونے کا ہے۔',
+      aboutPdf: 'پورا طریقہ اور فارمولے (PDF)',
+      aboutSourcesTitle: 'نمبر کہاں سے آئے',
+      sources: function (d, policy) {
+        return [
+          'بینکوں کی شرحیں: ہر بینک کی اپنی شرحوں کی فہرست، ' + d + ' کو دیکھی گئیں۔',
+          'قومی بچت کی شرحیں: سینٹرل ڈائریکٹوریٹ آف نیشنل سیونگز، یکم اکتوبر 2026 سے۔',
+          'پالیسی ریٹ: ' + policy + '%، اسٹیٹ بینک آف پاکستان۔',
+          'منافع پر ٹیکس: FBR کی ودہولڈنگ ٹیکس کی شرحیں (ابھی تصدیق طلب)۔',
+          'بینکوں کے لوگو: ہر بینک کی اپنی ویب سائٹ سے، صرف پہچان کے لیے۔'
+        ];
+      },
+      aboutLimitsTitle: 'حدود',
+      aboutLimits: 'یہ ایک ماڈل پر مبنی اندازہ ہے، مالی مشورہ نہیں۔ ماڈل کی ترتیبات ابھی حقیقی کیسز سے جانچی جا رہی ہیں، اور اکثر اسکیمیں حساب سے پہلے ہی بند ہو جاتی ہیں۔ کسی بھی کمپنی میں پیسے لگانے سے پہلے secp.gov.pk پر تصدیق کریں۔',
+      aboutOpenTitle: 'کھلا کوڈ',
+      aboutOpen: 'اس کیلکولیٹر کا پورا کوڈ کوئی بھی دیکھ اور جانچ سکتا ہے:',
+      version: function (v, d) { return 'ورژن ' + v + ' · ' + d; },
       modeThink: 'پیسے لگانے کا سوچ رہا ہوں', modeAlready: 'پیسے لگا چکا ہوں',
       qType: 'یہ کس قسم کی اسکیم ہے؟', typeHint: 'چننے سے عام وعدے کے نمبر بھر جائیں گے، آپ انہیں بدل سکتے ہیں۔',
       tyDouble: 'پیسے ڈبل', tyDoubleSub: 'مثلاً 70 دن میں ڈبل',
@@ -532,7 +624,30 @@
     },
     en: {
       title: 'Scheme Check',
-      tagline: 'Answer a few questions and see what would happen to your money in this scheme. Works without internet.',
+      tagline: 'Answer a few questions and see what would happen to your money in this scheme.',
+      slogan: 'Protect your money from scam schemes',
+      trFree: 'Free', trOffline: 'Works offline too', trSignup: 'No sign-up', trIndependent: 'Not linked to any company',
+      trRates: function (d) { return 'Rates: ' + d; },
+      aboutTitle: 'About this calculator',
+      aboutWhat: 'A free calculator that shows how long a high-profit scheme can last, how much you could lose, and what the same money would earn in a bank. It is not linked to any bank, company or government office. What you type stays on your phone unless you choose to share it on WhatsApp.',
+      aboutHowTitle: 'How the maths works',
+      aboutHow: 'A scheme like this pays old members with new members\' money. Month by month, the calculator works out when new money will fall short of the promised profits. That month is when the scheme runs out.',
+      aboutPdf: 'Full method and formulas (PDF)',
+      aboutSourcesTitle: 'Where the numbers come from',
+      sources: function (d, policy) {
+        return [
+          'Bank rates: each bank\'s own rate sheet, checked on ' + d + '.',
+          'National Savings rates: Central Directorate of National Savings, effective 1 October 2026.',
+          'Policy rate: ' + policy + '%, State Bank of Pakistan.',
+          'Tax on profit: FBR withholding tax rates (still being verified).',
+          'Bank logos: from each bank\'s own website, used only to identify them.'
+        ];
+      },
+      aboutLimitsTitle: 'Limits',
+      aboutLimits: 'This is an estimate from a model, not financial advice. The model\'s settings are still being checked against real cases, and most schemes shut down earlier than the maths says. Before putting money into any company, check it on secp.gov.pk.',
+      aboutOpenTitle: 'Open code',
+      aboutOpen: 'Anyone can read and check the full code:',
+      version: function (v, d) { return 'Version ' + v + ' · ' + d; },
       modeThink: 'Thinking of investing', modeAlready: 'Already invested',
       qType: 'What kind of scheme is it?', typeHint: 'Picking one fills in a typical promise. You can change the numbers.',
       tyDouble: 'Money doubling', tyDoubleSub: 'e.g. doubles in 70 days',
@@ -697,6 +812,19 @@
   }
 
   // ---------- language ----------
+  // Header trust strip date, the sources list and the version line, in the current language.
+  function renderAbout() {
+    var l = L(), c = BANKS.checked.split('-'), v = VERSION.date.split('-');
+    function day(p) { return Number(p[2]) + ' ' + l.months[Number(p[1]) - 1] + ' ' + p[0]; }
+    $('trRates').textContent = l.trRates(day(c));
+    var list = $('sourcesList');
+    list.textContent = '';
+    l.sources(day(c), BANKS.policyRate).forEach(function (s) {
+      var li = document.createElement('li'); li.textContent = s; list.appendChild(li);
+    });
+    $('version').textContent = l.version(VERSION.v, day(v));
+  }
+
   function setLang(lang) {
     state.lang = lang;
     app.setAttribute('lang', lang);
@@ -711,6 +839,7 @@
     });
     var c = BANKS.checked.split('-');
     $('ratesDate').textContent = L().ratesDate(Number(c[2]), L().months[Number(c[1]) - 1], c[0], BANKS.policyRate);
+    renderAbout();
     setMode(state.mode);
     setFreq(state.freq);
     buildBankGrid();
@@ -1171,6 +1300,14 @@
 
   // Hosted on the web, the page's link is what people share; saving a file is blocked there.
   if (document.querySelector('meta[name="claude:viewport-fit-sides"]')) $('shareCard').classList.add('hidden');
+
+  // About section links: the method PDF on the public site and the open code.
+  if (SITE && SITE.url) { $('pdfLink').href = SITE.url + 'Collapse-Model-Formula.pdf'; $('pdfLine').classList.remove('hidden'); }
+  if (SITE && SITE.repo) {
+    $('repoLink').href = SITE.repo;
+    $('repoLink').textContent = SITE.repo.replace(/^https:\/\//, '');
+    $('openBlock').classList.remove('hidden');
+  }
 
   // "Pass it on" card: QR code and public link, once the site exists.
   if (SITE && SITE.url) {

@@ -15,6 +15,13 @@ img = qrcode.make(url, image_factory=qrcode.image.svg.SvgPathFillImage, box_size
                   error_correction=qrcode.constants.ERROR_CORRECT_M)
 os.makedirs(os.path.join(root, 'assets'), exist_ok=True)
 img.save(os.path.join(root, 'assets', 'qr.svg'))
-with open(os.path.join(root, 'site.json'), 'w', encoding='utf-8') as f:
-    json.dump({'url': url}, f, indent=2)
+# Keep other settings already in site.json (such as the repo link); only the address changes.
+cfg = os.path.join(root, 'site.json')
+site = {}
+if os.path.exists(cfg):
+    with open(cfg, encoding='utf-8') as f:
+        site = json.load(f)
+site['url'] = url
+with open(cfg, 'w', encoding='utf-8') as f:
+    json.dump(site, f, indent=2)
 print('QR for ' + url + ' written to assets/qr.svg')

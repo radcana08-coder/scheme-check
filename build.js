@@ -29,9 +29,11 @@ function logosScript() {
 function siteScript() {
   var cfg = path.join(__dirname, 'site.json'), qr = path.join(__dirname, 'assets', 'qr.svg');
   if (!fs.existsSync(cfg) || !fs.existsSync(qr)) { console.log('Public link: none'); return 'window.SITE = null;\n'; }
-  var url = JSON.parse(fs.readFileSync(cfg, 'utf8')).url;
-  console.log('Public link: ' + url);
-  return 'window.SITE = ' + JSON.stringify({ url: url, qr: 'data:image/svg+xml;base64,' + fs.readFileSync(qr).toString('base64') }) + ';\n';
+  var site = JSON.parse(fs.readFileSync(cfg, 'utf8'));
+  console.log('Public link: ' + site.url);
+  return 'window.SITE = ' + JSON.stringify({
+    url: site.url, repo: site.repo || null, qr: 'data:image/svg+xml;base64,' + fs.readFileSync(qr).toString('base64')
+  }) + ';\n';
 }
 
 var GENERATED = { 'logos.js': logosScript, 'site.js': siteScript };
