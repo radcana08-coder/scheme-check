@@ -1,5 +1,7 @@
-<title>اسکیم چیک | Scheme Check</title><meta name="theme-color" content="#0b2545">
-
+<title>اسکیم چیک | Scheme Check</title>
+<meta name="theme-color" content="#0b2545">
+<meta name="description" content="Free Urdu calculator: check when a high-profit scheme will run out of money, what you could lose, and what a bank would pay instead.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%230b2545'/%3E%3Cpath d='M12 4.5 17.5 6.7v4.4c0 3.6-2.4 6.7-5.5 7.8-3.1-1.1-5.5-4.2-5.5-7.8V6.7z' fill='none' stroke='%23d4a72c' stroke-width='1.6'/%3E%3Cpath d='m9.5 11.9 1.8 1.8 3.4-3.6' fill='none' stroke='%23d4a72c' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -218,6 +220,14 @@
   .foot { background: var(--navy); color: var(--on-navy); border-top: 3px solid var(--gold); }
   .foot .inner { padding-block: 16px 28px; display: grid; gap: 4px; font-size: 0.68em; }
 
+  .verdict { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 10px 14px; border-radius: 14px; font-size: 1.15em; color: #ffffff; }
+  .verdict[data-level="high"] { background: var(--bad); }
+  .verdict[data-level="some"] { background: var(--warn); }
+  .verdict svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .wrap[lang="en"] .verdict { font-weight: 700; }
+  .next ol { margin: 4px 0 0; padding-inline-start: 1.4em; font-size: 0.86em; }
+  .next a { color: var(--sel); }
+
   .hidden { display: none !important; }
   bdi { unicode-bidi: isolate; }
   @media (max-width: 360px) { .chips.grid, .banks, .types { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -233,6 +243,7 @@
         </div>
         <div class="lang" role="group" aria-label="Language / زبان">
           <button type="button" lang="ur" data-lang="ur" aria-pressed="true">اردو</button>
+          <button type="button" lang="en" data-lang="ro" aria-pressed="false">Roman</button>
           <button type="button" lang="en" data-lang="en" aria-pressed="false">English</button>
         </div>
       </div>
@@ -266,18 +277,6 @@
         <button type="button" class="type" data-v="other"><svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="13"/><path d="M13 13.5a4 4 0 1 1 5.5 3.7c-1 .5-1.5 1.2-1.5 2.3v.8"/><circle class="fill" cx="17" cy="24.5" r="1.5"/></svg><span class="tn" data-t="tyOther"></span><span class="ts" data-t="tyOtherSub"></span></button>
       </div>
       <p class="hint" data-t="typeHint" style="margin-top:6px"></p>
-    </div>
-
-    <div class="card">
-      <div class="q"><span data-t="qSource"></span><span class="opt" data-t="optional"></span></div>
-      <div class="chips" id="sourceChips" role="group">
-        <button type="button" class="chip" data-v="whatsapp" data-t="srcWhatsapp"></button>
-        <button type="button" class="chip" data-v="person" data-t="srcPerson"></button>
-        <button type="button" class="chip" data-v="social" data-t="srcSocial"></button>
-        <button type="button" class="chip" data-v="other" data-t="srcOther"></button>
-      </div>
-      <label class="q" for="schemeName" style="margin-top:10px"><span data-t="qName"></span><span class="opt" data-t="optional"></span></label>
-      <div class="field"><input type="text" id="schemeName" maxlength="60" autocomplete="off" dir="auto"></div>
     </div>
 
     <div class="card">
@@ -349,6 +348,18 @@
       </details>
     </div>
 
+    <div class="card">
+      <div class="q"><span data-t="qSource"></span><span class="opt" data-t="optional"></span></div>
+      <div class="chips" id="sourceChips" role="group">
+        <button type="button" class="chip" data-v="whatsapp" data-t="srcWhatsapp"></button>
+        <button type="button" class="chip" data-v="person" data-t="srcPerson"></button>
+        <button type="button" class="chip" data-v="social" data-t="srcSocial"></button>
+        <button type="button" class="chip" data-v="other" data-t="srcOther"></button>
+      </div>
+      <label class="q" for="schemeName" style="margin-top:10px"><span data-t="qName"></span><span class="opt" data-t="optional"></span></label>
+      <div class="field"><input type="text" id="schemeName" maxlength="60" autocomplete="off" dir="auto"></div>
+    </div>
+
     <button type="submit" class="go" data-t="calc"></button>
     <p class="hint count-note hidden" id="countNote" data-t="countNote"></p>
     <p class="err" id="err" role="alert"></p>
@@ -356,6 +367,7 @@
 
   <section id="result" class="hidden" aria-live="polite">
     <span class="example hidden" id="exampleTag" data-t="example"></span>
+    <div class="verdict" id="verdict"></div>
     <div class="line l1"><span class="ln">1</span><p id="l1"></p><p class="sub" id="l1s"></p></div>
     <div class="line l2" id="l2box"><span class="ln">2</span><p id="l2"></p><p class="sub" id="l2s"></p></div>
 
@@ -401,7 +413,14 @@
       <div class="level hidden" id="level"></div>
     </div>
 
+    <div class="card next" id="nextCard">
+      <div class="q" data-t="nextTitle"></div>
+      <ol id="nextList"></ol>
+      <p class="hint"><a href="https://sdms.secp.gov.pk/" target="_blank" rel="noopener" data-t="report"></a></p>
+    </div>
+
     <a class="btn wa" id="waBtn" href="https://wa.me/" target="_blank" rel="noopener" data-t="wa"></a>
+    <button type="button" class="btn" id="resetBtn" style="width:100%;margin-top:10px" data-t="reset"></button>
   </section>
 
   <div class="card hidden" id="linkCard">
@@ -448,6 +467,7 @@
   <footer class="foot">
     <div class="inner">
       <div id="ratesDate"></div>
+      <div id="staleNote" class="hidden" data-t="stale"></div>
       <div data-t="disclaimer"></div>
       <div data-t="logosNote"></div>
     </div>
@@ -777,7 +797,7 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
   var SELF_HTML = '<!doctype html>\n' + document.documentElement.outerHTML;
 
   var Model = window.ScamModel, BANKS = window.BANKS, LOGOS = window.BANK_LOGOS || {}, SITE = window.SITE || null;
-  var VERSION = { v: '0.4', date: '2026-10-23' };
+  var VERSION = { v: '0.5', date: '2026-11-16' };
   var STORE = 'schemeCheck.v1';
   var SVG = 'http://www.w3.org/2000/svg';
   var $ = function (id) { return document.getElementById(id); };
@@ -905,8 +925,8 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
       money: function (n) {
         n = Math.max(0, n);
         var parts = [];
+        n = n >= 99950 ? Math.round(n / 1000) * 1000 : n; // 99,960 reads as 1 lakh, not "100 hazar"
         if (n >= 100000) {
-          n = Math.round(n / 1000) * 1000;
           var crore = Math.floor(n / 10000000), lakh = Math.floor(n % 10000000 / 100000), hazar = Math.floor(n % 100000 / 1000);
           if (crore) parts.push(crore + ' کروڑ');
           if (lakh) parts.push(lakh + ' لاکھ');
@@ -1100,6 +1120,183 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
     }
   };
 
+  // ---------- v0.5 words: verdict banner, next steps, reset; and Roman Urdu ----------
+  function addWords(lang, words) { for (var k in words) T[lang][k] = words[k]; }
+  addWords('ur', {
+    riskHigh: 'زیادہ خطرہ', riskCheck: 'تصدیق ضروری ہے',
+    secpAlready1: 'اتنے منافع پر صرف حساب سے فیصلہ نہیں ہو سکتا۔ ' + b('secp.gov.pk') + ' پر دیکھیں کہ اس کمپنی کو لوگوں سے پیسے لینے کی اجازت ہے یا نہیں۔',
+    nextTitle: 'اب کیا کریں؟',
+    nextThink: ['ابھی اس اسکیم میں پیسے نہ لگائیں۔', 'secp.gov.pk پر دیکھیں کہ کمپنی کے پاس لائسنس ہے یا نہیں۔', 'فیصلے سے پہلے گھر والوں یا کسی سمجھدار شخص سے مشورہ کریں۔', 'یہ نتیجہ ان لوگوں کو بھیجیں جنہیں یہی اسکیم بتائی گئی ہے۔'],
+    nextAlready: ['اس اسکیم میں مزید پیسے نہ لگائیں۔', 'جتنے پیسے نکال سکتے ہیں، ابھی نکال لیں۔', 'رسیدیں، میسج اور اسکرین شاٹ سنبھال کر رکھیں۔', 'دوسرے لوگوں کو اس اسکیم میں شامل نہ کریں۔'],
+    nextCheck: ['secp.gov.pk پر دیکھیں کہ کمپنی کے پاس لائسنس ہے یا نہیں۔', 'نیچے خطرے کی نشانیوں کے سوالوں کے جواب دیں۔', 'جب تک تصدیق نہ ہو جائے، پیسے نہ لگائیں۔'],
+    report: 'دھوکے کی شکایت SECP کو کریں', reset: 'نئی اسکیم چیک کریں',
+    stale: 'یہ شرحیں 60 دن سے زیادہ پرانی ہیں۔ تازہ شرح اپنے بینک سے پوچھیں۔'
+  });
+  addWords('en', {
+    riskHigh: 'High risk', riskCheck: 'Needs checking',
+    secpAlready1: 'At this return, the numbers alone cannot tell. Check on ' + b('secp.gov.pk') + ' whether this company is allowed to take money from the public.',
+    nextTitle: 'What to do now',
+    nextThink: ['Do not put money into this scheme for now.', 'Check on secp.gov.pk whether the company has a licence.', 'Talk to your family or someone you trust before deciding.', 'Send this result to others who were offered the same scheme.'],
+    nextAlready: ['Do not put any more money into this scheme.', 'Take out whatever money you can now.', 'Keep your receipts, messages and screenshots safe.', 'Do not bring other people into this scheme.'],
+    nextCheck: ['Check on secp.gov.pk whether the company has a licence.', 'Answer the warning-sign questions below.', 'Do not put money in until it is confirmed.'],
+    report: 'Report a scam to SECP', reset: 'Check another scheme',
+    stale: 'These rates are more than 60 days old. Ask your bank for the current rate.'
+  });
+
+  // Roman Urdu: same words in Latin letters. Anything missing falls back to English.
+  T.ro = Object.create(T.en);
+  addWords('ro', {
+    title: 'Scheme Check',
+    tagline: 'Chand baatein likhein, aur jaanein ke is scheme mein aap ke paison ka kya hoga.',
+    slogan: 'Apne paise dhoke ki schemon se bachayein',
+    trFree: 'Muft', trOffline: 'Internet ke baghair bhi', trSignup: 'Koi sign-up nahin', trIndependent: 'Kisi company se taalluq nahin',
+    aboutTitle: 'Yeh calculator kya hai?',
+    aboutWhat: 'Yeh ek muft calculator hai jo batata hai ke zyada munafay ka wada karne wali scheme kab tak chal sakti hai, is mein aap ka kitna nuqsan ho sakta hai, aur yehi paise bank mein kitna kamate. Yeh kisi bank, company ya sarkari idaray se munsalik nahin. Hisaab lagane par yeh sirf baghair naam ki ginti rakhta hai: scheme ki qism, wada, nateeja, aur agar aap likhein to scheme ka naam aur woh aap tak kaise pohanchi. Aap ka naam, phone number ya raqam kabhi nahin bheji jati.',
+    aboutHowTitle: 'Hisaab kaise lagta hai',
+    aboutHow: 'Aisi scheme purane members ko naye members ke paison se munafa deti hai. Calculator mahina ba mahina hisaab lagata hai ke naye logon ke paise kab wada kiye gaye munafay se kam par jayenge. Wohi mahina scheme ke khatam hone ka hai.',
+    aboutPdf: 'Poora tareeqa aur formulay (PDF)',
+    aboutSourcesTitle: 'Number kahan se aaye',
+    aboutLimitsTitle: 'Hadood',
+    aboutLimits: 'Yeh ek model par mabni andaza hai, maali mashwara nahin. Model ki settings abhi asal cases se jaanchi ja rahi hain, aur aksar schemein hisaab se pehle hi band ho jati hain. Kisi bhi company mein paise lagane se pehle secp.gov.pk par tasdeeq karein.',
+    aboutOpenTitle: 'Khula code', aboutOpen: 'Is calculator ka poora code koi bhi dekh aur jaanch sakta hai:',
+    modeThink: 'Paise lagane ka soch raha hoon', modeAlready: 'Paise laga chuka hoon',
+    qType: 'Yeh kis qism ki scheme hai?', typeHint: 'Chunne se aam waday ke number bhar jayenge, aap inhein badal sakte hain.',
+    qSource: 'Yeh scheme aap tak kaise pohanchi?', optional: 'ikhtiyari',
+    srcWhatsapp: 'WhatsApp par forward', srcPerson: 'Kisi jaanne wale se', srcSocial: 'Social media', srcOther: 'Koi aur',
+    qName: 'Scheme ka naam', namePh: 'Maslan Double Munafa Plan',
+    countNote: 'Hisaab lagane par hum baghair naam ke ginti rakhte hain. Aap ka naam, number ya raqam kabhi nahin bheji jati.',
+    tyDouble: 'Paise double', tyDoubleSub: 'maslan 70 din mein double',
+    tyCommittee: 'Committee double', tyCommitteeSub: 'maslan 6 mahine mein double',
+    tyCrypto: 'Crypto / app', tyCryptoSub: 'maslan rozana 2%',
+    tyForex: 'Forex trading', tyForexSub: 'maslan har mahine 10%',
+    tyModaraba: 'Modaraba / karobar', tyModarabaSub: 'maslan har mahine 5%',
+    tyOther: 'Koi aur', tyOtherSub: 'apne number likhein',
+    qAmount: 'Aap kitne paise lagana chahte hain?', qAmountAlready: 'Aap ne kitne paise lagaye hain?', rs: 'rupay',
+    a10k: '10 hazar', a50k: '50 hazar', a1l: '1 lakh', a5l: '5 lakh',
+    qFreq: 'Munafa kab kab milne ka wada hai?',
+    fDaily: 'Rozana', fWeekly: 'Har haftay', fMonthly: 'Har mahine', fQuarterly: 'Har 3 mahine', fYearly: 'Har saal',
+    fLump: 'Ek hi baar', fLumpSub: 'maslan paise double',
+    unitPct: 'Feesad %', unitRs: 'Rupay',
+    rate: {
+      daily: ['Har roz kitna munafa bataya hai?', 'maslan rozana 1 feesad'],
+      weekly: ['Har haftay kitna munafa bataya hai?', 'maslan har haftay 5 feesad'],
+      monthly: ['Har mahine kitna munafa bataya hai?', 'maslan har mahine 10 feesad'],
+      quarterly: ['Har 3 mahine mein kitna munafa bataya hai?', 'maslan har 3 mahine mein 15 feesad'],
+      yearly: ['Har saal kitna munafa bataya hai?', 'maslan saal ka 40 feesad'],
+      lump: ['Kul kitna munafa bataya hai?', 'paise double hon to 100 likhein']
+    },
+    rateRs: {
+      daily: ['Har roz kitne rupay milenge?', 'maslan 1 lakh par rozana 1 hazar'],
+      weekly: ['Har haftay kitne rupay milenge?', 'maslan 1 lakh par har haftay 5 hazar'],
+      monthly: ['Har mahine kitne rupay milenge?', 'maslan 1 lakh par har mahine 8 hazar'],
+      quarterly: ['Har 3 mahine mein kitne rupay milenge?', 'maslan 1 lakh par har 3 mahine mein 15 hazar'],
+      yearly: ['Har saal kitne rupay milenge?', 'maslan 1 lakh par saal ke 40 hazar'],
+      lump: ['Kul kitne rupay wapas milenge?', 'maslan 50 hazar de kar 1 lakh wapas']
+    },
+    per: { daily: 'rozana', weekly: 'har haftay', monthly: 'har mahine', quarterly: 'har 3 mahine', yearly: 'har saal' },
+    convLumpPct: function (p) { return '= ' + p + '% munafa'; },
+    convLumpRs: function (m) { return '= kul ' + m + ' wapas'; },
+    lumpDouble: 'Paise double', lumpTriple: 'Teen guna',
+    qPeriod: 'Kitne arse baad milega?', uDays: 'Din', uMonths: 'Mahine',
+    qAgo: 'Kitne mahine pehle paise lagaye thay?', qGot: 'Ab tak kitne paise wapas mil chuke hain? (agar yaad ho)',
+    gotHint: 'Yaad na ho to khali chhor dein, hum waday ke hisaab se andaza lagayenge.',
+    qAge: 'Yeh scheme kitne mahine se chal rahi hai? (agar maloom ho)', ageHint: 'Maloom na ho to khali chhor dein.',
+    calc: 'Hisaab lagayein',
+    errAmount: 'Pehle raqam likhein.', errRate: 'Bataya gaya munafa likhein.', errPeriod: 'Likhein ke munafa kitne din ya mahine baad milega.',
+    errBack: 'Wapas milne wali raqam, lagayi gayi raqam se zyada likhein.', errAgo: 'Likhein ke kitne mahine pehle paise lagaye thay.',
+    example: 'Yeh ek misaal hai. Upar apni scheme ke number likhein.',
+    chartTitle: 'Scheme ki tanki mein naqd paise',
+    chartCaption: 'Naye logon ke paison se tanki bharti hai. Jab naye log kam hote hain to munafa dete dete khali ho jati hai.',
+    chartToday: 'Aaj', chartStart: 'Shuru',
+    chartTip: function (when, full) { return when + ': tanki ' + full + '% bhari'; },
+    chartAria: function (end) { return 'Scheme ki naqd raqam pehle barhti hai, phir ' + end + ' tak khatam ho jati hai.'; },
+    whyBtn: 'Kyun?',
+    why: 'Yeh scheme purane members ko naye members ke paison se munafa deti hai. Jab naye log aana kam ho jayenge to paise khatam ho jayenge.',
+    qBank: 'Yehi paise bank mein rakhein to kya milega?', qBankAlready: 'Agar yehi paise bank mein rakhe hote to?', bankHint: 'Apna bank chunein',
+    tSavings: 'Aam bachat', tIslamic: 'Islami bachat', tFixed: 'Fixed deposit',
+    typeName: { savings: 'aam bachat account', islamic: 'Islami bachat account', fixed: 'ek saal ke fixed deposit' },
+    taxQ: 'Munafay par tax:', taxNon: 'Non-filer', taxFiler: 'Filer', taxBefore: 'Tax se pehle',
+    taxHint: 'Agar aap ka naam FBR ki Active Taxpayer List mein hai to Filer chunein.',
+    rateNote: function (p, tax) { return 'Munafa: ' + p.rate.toFixed(2) + '% salana' + (tax ? ', ' + tax + '% tax katne ke baad' : ' (tax se pehle)'); },
+    afterTax: ' (tax ke baad)',
+    flagsTitle: 'Khatre ki nishaniyan', flagsHint: 'Har sawal ka jawab dein. Hisaab ke baghair bhi yeh dhoka pehchanne mein madad karte hain.',
+    yes: 'Haan', no: 'Nahin',
+    flagQs: [
+      'Kya munafay ki guarantee di gayi hai?',
+      'Kya naye log lane par bonus ya commission milta hai?',
+      'Kya SECP ya State Bank ka licence dikhaye baghair paise mangay gaye?',
+      'Kya yeh nahin bataya gaya ke paisa kis karobar mein lagega?',
+      'Kya jaldi faisla karne ka dabao hai? (maslan "offer sirf aaj")',
+      'Kya paise nikalne mein der ya bahane hote hain?'
+    ],
+    flagNone: 'Abhi koi bari nishani nahin mili. Phir bhi paise lagane se pehle secp.gov.pk par tasdeeq karein.',
+    flagSome: function (n) { return 'Khatra: ' + n + ' nishaniyan mili hain. Yeh dhoke ki scheme ho sakti hai.'; },
+    flagHigh: function (n, already) { return 'Bohat zyada khatra: ' + n + ' nishaniyan mili hain. ' + (already ? 'Mazeed paise na lagayein aur jo nikal sakein nikal lein.' : 'Is mein paise na lagayein.'); },
+    wa: 'WhatsApp par bhejein',
+    shareApp: 'Yeh calculator kisi ko bhejein ya phone mein mehfooz karein',
+    linkTitle: 'Yeh calculator doosron tak pohanchayein',
+    linkHint: 'Phone ke camera se yeh QR code scan karein, ya link copy kar ke WhatsApp par bhejein.',
+    copy: 'Link copy karein', copied: 'Link copy ho gaya.', copyFail: 'Link ko daba kar rakhein aur copy karein.',
+    tryIt: 'Apni scheme khud check karein:',
+    adv: 'Maahireen ke liye: model ki settings', advReset: 'Is qism ki scheme ki settings par wapas',
+    disclaimer: 'Yeh hisaab ek model par mabni andaza hai, maali mashwara nahin. Kisi bhi company mein paise lagane se pehle secp.gov.pk par tasdeeq karein.',
+    logosNote: 'Bankon ke naam aur logo sirf pehchan ke liye hain. Is calculator ka kisi bank se taalluq nahin.',
+    money: function (n) {
+      n = Math.max(0, n);
+      n = n >= 99950 ? Math.round(n / 1000) * 1000 : n >= 1000 ? Math.round(n / 100) * 100 : Math.round(n);
+      var parts = [];
+      if (n >= 100000) {
+        var crore = Math.floor(n / 10000000), lakh = Math.floor(n % 10000000 / 100000), hazar = Math.floor(n % 100000 / 1000);
+        if (crore) parts.push(crore + ' crore');
+        if (lakh) parts.push(lakh + ' lakh');
+        if (hazar) parts.push(hazar + ' hazar');
+      } else if (n >= 1000) {
+        parts.push(Math.floor(n / 1000) + ' hazar');
+        if (n % 1000) parts.push(String(n % 1000));
+      } else {
+        parts.push(String(n));
+      }
+      return parts.join(' ') + ' rupay';
+    },
+    monthCount: function (n) { return n === 1 ? '1 mahina' : n + ' mahine'; },
+    ratesDate: function (d, m, y, policy) { return 'Bankon ke rates ' + d + ' ' + m + ' ' + y + ' ke hain. SBP policy rate ' + policy + '%. Tax ke rates ki tasdeeq baqi hai.'; },
+    l1: function (when) { return 'Is scheme ke paise zyada se zyada ' + b(when) + ' tak khatam ho jayenge.'; },
+    l1s: 'Aksar aisi schemein is se pehle hi band ho jati hain.',
+    l2All: function (amt) { return 'Agar aap ' + b(amt) + ' lagayein to ' + b('taqreeban saare paise') + ' doob jayenge.'; },
+    l2Loss: function (amt, loss) { return 'Agar aap ' + b(amt) + ' lagayein to taqreeban ' + b(loss) + ' doob jayenge.'; },
+    l2Gain: function (rec) { return 'Shayad aap ko ' + b(rec) + ' wapas mil jayein, lekin yeh munafa doosre logon ke doobe hue paison se aayega.'; },
+    l2s: function (tenths) {
+      return (tenths >= 10 ? 'Is scheme mein taqreeban sab log nuqsan mein rahenge.' : 'Is scheme mein har 10 mein se ' + tenths + ' log nuqsan mein rahenge.') +
+        ' Baad mein aane walon ke taqreeban saare paise doob jate hain.';
+    },
+    inv2: function (rec, risk, est) { return 'Aap ko ab tak ' + (est ? 'taqreeban ' : '') + b(rec) + ' wapas mile hain. Aap ke ' + b(risk) + ' abhi khatre mein hain.'; },
+    inv2Back: function (rec, est) { return 'Aap ab tak ' + (est ? 'taqreeban ' : '') + b(rec) + ' wapas le chuke hain, jo aap ki raqam se zyada hai. Mazeed paise na lagayein.'; },
+    inv2s: function (tenths) {
+      return 'Jitne paise nikal sakte hain, abhi nikal lein. ' +
+        (tenths >= 10 ? 'Is scheme mein taqreeban sab log nuqsan mein rahenge.' : 'Is scheme mein har 10 mein se ' + tenths + ' log nuqsan mein rahenge.');
+    },
+    overdue1: 'Hisaab ke mutabiq is scheme ke paise ' + b('ab tak khatam ho jane chahiye thay') + '. Is mein naye paise na lagayein.',
+    overdueAlready1: 'Hisaab ke mutabiq is scheme ke paise ' + b('ab tak khatam ho jane chahiye thay') + '. Jitna jaldi ho sake apne paise nikalein.',
+    overdueSub: 'Jo scheme apni had se zyada chal rahi ho, us mein abhi lagaya gaya paisa sab se zyada khatre mein hai.',
+    overdue2: function (amt) { return 'Agar aap ' + b(amt) + ' lagayein to taqreeban saare paise doob sakte hain.'; },
+    secp1: 'Itne munafay par sirf hisaab se faisla nahin ho sakta. Paise lagane se pehle ' + b('secp.gov.pk') + ' par dekhein ke is company ko logon se paise lene ki ijazat hai ya nahin.',
+    secpAlready1: 'Itne munafay par sirf hisaab se faisla nahin ho sakta. ' + b('secp.gov.pk') + ' par dekhein ke is company ko logon se paise lene ki ijazat hai ya nahin.',
+    secpSub: 'Sirf company ka register hona kaafi nahin. Neeche khatre ki nishaniyan bhi dekhein.',
+    l3: function (amt, bank, type, months, profit, tax) {
+      return 'Yehi ' + b(amt) + ' ' + bank + ' ke ' + type + ' mein ' + b(months) + ' rakhein to taqreeban ' + b(profit) + ' munafa milega' + tax + ', aur asal raqam bhi mehfooz rahegi.';
+    },
+    l3Past: function (amt, bank, type, months, profit, tax) {
+      return 'Agar yehi ' + b(amt) + ' ' + b(months) + ' pehle ' + bank + ' ke ' + type + ' mein rakhte to ab tak taqreeban ' + b(profit) + ' munafa milta' + tax + ', aur asal raqam bhi mehfooz hoti.';
+    },
+    riskHigh: 'Zyada khatra', riskCheck: 'Tasdeeq zaroori hai',
+    nextTitle: 'Ab kya karein?',
+    nextThink: ['Abhi is scheme mein paise na lagayein.', 'secp.gov.pk par dekhein ke company ke paas licence hai ya nahin.', 'Faislay se pehle ghar walon ya kisi samajhdar shakhs se mashwara karein.', 'Yeh nateeja un logon ko bhejein jinhein yehi scheme batayi gayi hai.'],
+    nextAlready: ['Is scheme mein mazeed paise na lagayein.', 'Jitne paise nikal sakte hain, abhi nikal lein.', 'Raseedein, message aur screenshot sambhal kar rakhein.', 'Doosre logon ko is scheme mein shamil na karein.'],
+    nextCheck: ['secp.gov.pk par dekhein ke company ke paas licence hai ya nahin.', 'Neeche khatre ki nishaniyon ke sawalon ke jawab dein.', 'Jab tak tasdeeq na ho jaye, paise na lagayein.'],
+    report: 'Dhoke ki shikayat SECP ko karein', reset: 'Nayi scheme check karein',
+    stale: 'Yeh rates 60 din se zyada purane hain. Taza rate apne bank se poochein.'
+  });
+
   var state = { lang: 'ur', mode: 'think', scheme: 'other', source: '', freq: 'monthly', unit: 'days', rateUnit: 'pct', bank: null, type: 'savings', tax: 'nonfiler', flags: {} };
   var last = null; // { r, input, params, example, got }
   function L() { return T[state.lang]; }
@@ -1133,7 +1330,7 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
   function save() {
     var data = {
       lang: state.lang, mode: state.mode, scheme: state.scheme, source: state.source, freq: state.freq, unit: state.unit, rateUnit: state.rateUnit,
-      bank: state.bank, type: state.type, tax: state.tax, adv: readAdv()
+      bank: state.bank, type: state.type, tax: state.tax, adv: customAdv()
     };
     var old = load();
     INPUTS.forEach(function (k) {
@@ -1155,13 +1352,16 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
       var li = document.createElement('li'); li.textContent = s; list.appendChild(li);
     });
     $('version').textContent = l.version(VERSION.v, day(v));
+    $('staleNote').classList.toggle('hidden', Date.now() - new Date(BANKS.checked).getTime() < 60 * 86400000);
   }
 
   function setLang(lang) {
     state.lang = lang;
-    app.setAttribute('lang', lang);
+    app.setAttribute('lang', lang === 'ur' ? 'ur' : 'en'); // Roman Urdu is styled like English
     app.setAttribute('dir', lang === 'ur' ? 'rtl' : 'ltr');
-    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('lang', lang === 'ro' ? 'ur-Latn' : lang);
+    $('err').textContent = '';
+    $('listenBtn').classList.toggle('hidden', lang === 'ro'); // no phone voice reads Roman Urdu well
     document.documentElement.setAttribute('dir', lang === 'ur' ? 'rtl' : 'ltr');
     Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) {
       el.textContent = L()[el.getAttribute('data-t')];
@@ -1386,6 +1586,11 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
     p.M = Math.max(p.M, 2);
     return p;
   }
+  // Saved only when the expert changed something, so new model settings reach returning users.
+  function customAdv() {
+    var adv = readAdv(), base = Model.typeParams(state.scheme);
+    return ADV.some(function (key) { return adv[key] !== base[key]; }) ? adv : undefined;
+  }
   $('advReset').addEventListener('click', function () { fillAdv(Model.typeParams(state.scheme)); });
 
   // ---------- calculate ----------
@@ -1420,7 +1625,7 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
       if (got !== null && !(got >= 0)) got = null;
     }
 
-    var params = readAdv();
+    var params = opts.example ? Model.typeParams('other') : readAdv();
     // The verdict uses the reference savings rate, so it doesn't change with the bank picked afterwards.
     var input = {
       amount: amount, rate: rate, freq: state.freq, lumpMonths: lumpMonths,
@@ -1459,8 +1664,16 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
     } else if (r.verdict === 'overdue') {
       l1 = l.overdue1; l1s = l.overdueSub; l2 = l.overdue2(amt);
     } else {
-      l1 = l.secp1; l1s = l.secpSub; showL2 = false;
+      l1 = state.mode === 'already' ? l.secpAlready1 : l.secp1; l1s = l.secpSub; showL2 = false;
     }
+
+    var risky = r.verdict !== 'check-secp';
+    $('verdict').setAttribute('data-level', risky ? 'high' : 'some');
+    $('verdict').innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + LEVEL_ICONS[risky ? 'high' : 'some'] + '</svg><span></span>';
+    $('verdict').querySelector('span').textContent = risky ? l.riskHigh : l.riskCheck;
+    var steps = !risky ? l.nextCheck : state.mode === 'already' ? l.nextAlready : l.nextThink;
+    $('nextList').textContent = '';
+    steps.forEach(function (text) { var li = document.createElement('li'); li.textContent = text; $('nextList').appendChild(li); });
 
     $('exampleTag').classList.toggle('hidden', !last.example);
     $('l1').innerHTML = l1; $('l1s').textContent = l1s;
@@ -1594,6 +1807,22 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
     this.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
 
+  // ---------- start again ----------
+  $('resetBtn').addEventListener('click', function () {
+    stopSpeaking();
+    INPUTS.forEach(function (id) { $(id).value = ''; });
+    state.flags = {}; state.source = ''; last = null;
+    setScheme('other', false); setFreq('monthly'); pressed('sourceChips', '');
+    buildFlags(); showAmountWords();
+    $('result').classList.add('hidden'); $('detail').textContent = ''; $('err').textContent = '';
+    try {
+      var kept = load();
+      INPUTS.concat(['adv', 'source', 'scheme', 'freq']).forEach(function (k) { delete kept[k]; });
+      localStorage.setItem(STORE, JSON.stringify(kept));
+    } catch (e) { /* storage blocked: fine */ }
+    $('form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
   // ---------- sharing ----------
   function updateShare() {
     var parts = [];
@@ -1664,7 +1893,7 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
     var r = last.r, monthly = Model.monthlyRate(r.schedule), name = $('schemeName').value.replace(/\s+/g, ' ').trim().slice(0, 60);
     // The same scheme counts once a day per device, however often Calculate is pressed.
     var key = [state.mode, state.scheme, state.freq, Math.round(monthly * 10000), name.toLowerCase()].join('|');
-    var today = new Date().toISOString().slice(0, 10), seen = storeGet(SEEN, {});
+    var day = new Date(), today = day.getFullYear() + '-' + (day.getMonth() + 1) + '-' + day.getDate(), seen = storeGet(SEEN, {}); // the user's own day, not UTC
     if (seen[key] === today) return;
     seen[key] = today;
     var keys = Object.keys(seen);
@@ -1672,7 +1901,7 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
     storeSet(SEEN, seen);
     var left = r.invested ? r.invested.monthsLeft : r.family ? r.family.monthsLeft : '';
     var row = {
-      device: deviceId(), where: where(), lang: state.lang, mode: state.mode, type: state.scheme, source: state.source,
+      device: deviceId(), where: where(), lang: state.lang === 'ro' ? 'ur' : state.lang, mode: state.mode, type: state.scheme, source: state.source,
       name: name, freq: state.freq, rate: Math.round(monthly * 10000) / 100, verdict: r.verdict,
       months: r.verdict === 'check-secp' ? '' : left, warning: r.verdict !== 'check-secp', version: VERSION.v
     };
@@ -1696,7 +1925,7 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
   pressed('rateUnitChips', state.rateUnit);
   fillAdv(saved.adv || Model.typeParams(state.scheme));
   if (saved.age) $('ageBox').open = true;
-  setLang(saved.lang === 'en' ? 'en' : 'ur');
+  setLang(saved.lang === 'en' || saved.lang === 'ro' ? saved.lang : 'ur');
 
   // Hosted on the web, the page's link is what people share; saving a file is blocked there.
   if (document.querySelector('meta[name="claude:viewport-fit-sides"]')) $('shareCard').classList.add('hidden');
@@ -1737,5 +1966,8 @@ window.SITE = {"url":"https://radcana08-coder.github.io/scheme-check/","repo":"h
     $('amount').value = '100000'; $('rate').value = '10'; setFreq('monthly'); showAmountWords();
     calculate({ example: true });
   }
+
+  // On the public site, cache the page so an installed copy opens without internet.
+  if ('serviceWorker' in navigator && where() === 'web') navigator.serviceWorker.register('sw.js').catch(function () {});
 })();
 </script>

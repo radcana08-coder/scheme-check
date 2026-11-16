@@ -57,6 +57,7 @@ var hosted = inlined
     '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
     '<link rel="stylesheet" href="' + FONTS + '">')
+  .replace(/<!-- web -->[\s\S]*?<!-- \/web -->\s*/, '') // manifest and link-preview tags are for the public site only
   .replace(/^<!doctype html>\s*/i, '')
   .replace(/<\/?html[^>]*>\s*/g, '')
   .replace(/<\/?head>\s*/g, '')
@@ -82,4 +83,18 @@ fs.writeFileSync(path.join(site, 'index.html'), offline);
 fs.writeFileSync(path.join(site, '.nojekyll'), '');
 var pdf = path.join(__dirname, 'dist', 'Collapse-Model-Formula.pdf');
 if (fs.existsSync(pdf)) fs.copyFileSync(pdf, path.join(site, 'Collapse-Model-Formula.pdf'));
+// Installable web app: manifest, offline cache and icons (icons come from tools/make-icons.py).
+fs.writeFileSync(path.join(site, 'manifest.webmanifest'), JSON.stringify({
+  name: 'اسکیم چیک | Scheme Check', short_name: 'Scheme Check',
+  description: 'Check when a high-profit scheme will run out of money, and what a bank would pay instead.',
+  start_url: './', scope: './', display: 'standalone', lang: 'ur', dir: 'rtl',
+  background_color: '#0b2545', theme_color: '#0b2545',
+  icons: [192, 512].map(function (size) {
+    return { src: 'icon-' + size + '.png', sizes: size + 'x' + size, type: 'image/png', purpose: 'any maskable' };
+  })
+}, null, 2) + '\n');
+fs.copyFileSync(path.join(__dirname, 'src', 'sw.js'), path.join(site, 'sw.js'));
+[192, 512].forEach(function (size) {
+  fs.copyFileSync(path.join(__dirname, 'assets', 'icon-' + size + '.png'), path.join(site, 'icon-' + size + '.png'));
+});
 console.log('Wrote ' + site + ' (website)');

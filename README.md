@@ -2,7 +2,7 @@
 
 An offline Urdu calculator. It tells a family when a high-return scheme is likely to run out of money, how much they would lose, and what the same money would earn in a bank.
 
-**Status: demo v0.3.** The model parameters are placeholders and have not been calibrated against real collapsed schemes. Don't present the results as findings yet.
+**Status: demo v0.5.** The model parameters are placeholders and have not been calibrated against real collapsed schemes. Don't present the results as findings yet.
 
 **Live:** https://radcana08-coder.github.io/scheme-check/ (formula PDF: https://radcana08-coder.github.io/scheme-check/Collapse-Model-Formula.pdf)
 
@@ -84,3 +84,13 @@ Each check on the public website (and on offline copies, once they're back onlin
 Set-up, once: in a new Google Sheet open Extensions → Apps Script, replace the code with `tools/scheme-log.gs`, save, run `setup`, then Deploy → New deployment → Web app (Execute as: Me, Who has access: Anyone). Put the `/exec` address in `site.json` as `"log"`, run `node build.js`, commit and push. Until then the site counts nothing.
 
 To test locally without touching the Sheet: set `"log": "http://localhost:4173/__log"`, build, run `node serve.js` and open `http://localhost:4173/scheme-check.html?logtest`.
+
+## v0.5 (16 Nov 2026)
+
+- **Roman Urdu** as a third language (falls back to English for any missing word; logged as Urdu in the Sheet).
+- **Verdict banner** above the result, a **"What to do now"** card with steps and a link to SECP's complaint desk, and a **"Check another scheme"** button that clears the form.
+- Optional questions (how it reached you, scheme name) now sit below the main ones.
+- **Installable:** home-screen icon, web manifest and an offline cache (`src/sw.js`, network first) on the public site; favicon and WhatsApp link-preview tags. Icons come from `py tools/make-icons.py`.
+- A note appears when the bank rates are more than 60 days old.
+- **Fixes:** amounts just under 1 lakh read "100 hazar" in Urdu; saved expert settings could hide future model updates; the example used the last scheme type's settings; the "check SECP" wording in already-invested mode; error text staying in the old language; the once-a-day count used UTC instead of the user's day.
+- **Tests:** `node tests/model.test.js` runs 4,000 random schemes against rules that must always hold.
