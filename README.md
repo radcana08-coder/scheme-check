@@ -2,7 +2,7 @@
 
 An offline Urdu calculator. It tells a family when a high-return scheme is likely to run out of money, how much they would lose, and what the same money would earn in a bank.
 
-**Status: demo v0.5.** The model parameters are placeholders and have not been calibrated against real collapsed schemes. Don't present the results as findings yet.
+**Status: demo v0.6.** The model parameters are placeholders and have not been calibrated against real collapsed schemes. Don't present the results as findings yet.
 
 **Live:** https://radcana08-coder.github.io/scheme-check/ (formula PDF: https://radcana08-coder.github.io/scheme-check/Collapse-Model-Formula.pdf)
 
@@ -67,9 +67,9 @@ If the address ever changes, run `py tools/make-qr.py <new address>` and rebuild
 - Warning-sign checklist (6 yes/no questions → none / warning / high risk).
 - Tax switch on the bank line: non-filer, filer, before tax (`tax` in `banks.js`, to be verified).
 
-## Design (v0.3)
+## Design (v0.6)
 
-Navy and gold, always light: a navy header band with a faint gold eight-point star pattern and a shield logo, a trust strip (free, works offline, no sign-up, not linked to any company, rates date), white cards with a soft shadow, an About and sources section (what it is, how the maths works with a link to the PDF, where the numbers come from, limits, open code) and a navy footer band. Colours are the tokens at the top of the `<style>` block in `src/index.html`.
+Set out like a bank statement, always light: a plain navy header with a gold rule, the shield mark and the language links; a white page with numbered questions split by thin rules; scheme types as picture cards, two to a row, each with a small navy, light-blue and gold drawing (coins doubling, a committee, a phone app, a trading chart, a shop, a leaflet); square-cornered controls. The result is a bordered statement: a heading row with the date and a red "high risk" stamp, then labelled rows (amount, promise, the month the money runs out, your loss, how many people lose, what a bank would pay), followed by the plain-language lines. Urdu is set in Noto Nastaliq Urdu and English in IBM Plex Sans (Google Fonts; the page falls back to the phone's own fonts offline). Colours are the tokens at the top of the `<style>` block in `src/index.html`.
 
 ## Response log (Google Sheet)
 
@@ -84,6 +84,13 @@ Each check on the public website (and on offline copies, once they're back onlin
 Set-up, once: in a new Google Sheet open Extensions → Apps Script, replace the code with `tools/scheme-log.gs`, save, run `setup`, then Deploy → New deployment → Web app (Execute as: Me, Who has access: Anyone). Put the `/exec` address in `site.json` as `"log"`, run `node build.js`, commit and push. Until then the site counts nothing.
 
 To test locally without touching the Sheet: set `"log": "http://localhost:4173/__log"`, build, run `node serve.js` and open `http://localhost:4173/scheme-check.html?logtest`.
+
+## v0.6 (18 Nov 2026)
+
+- **New look:** the bank-statement design above, replacing the rounded cards, icon tiles and coloured blocks.
+- **Result statement:** the key numbers as labelled rows before the sentences; "Pick your bank below" fills in once a bank is chosen.
+- **Scheme-type pictures:** the first question is a grid of picture cards with a drawing for each kind of scheme, so it can be answered without reading much.
+- **Fonts:** Noto Nastaliq Urdu (newspaper-style Nastaliq) and IBM Plex Sans, replacing Gulzar and Atkinson Hyperlegible.
 
 ## v0.5 (16 Nov 2026)
 

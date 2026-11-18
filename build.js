@@ -9,7 +9,7 @@
 var fs = require('fs');
 var path = require('path');
 
-var FONTS = 'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Gulzar&display=swap';
+var FONTS = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap';
 var MIME = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp' };
 
 function logosScript() {
